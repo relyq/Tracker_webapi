@@ -54,6 +54,11 @@ namespace Tracker.Pages.Tickets
 
             Ticket = await _context.Ticket.FirstOrDefaultAsync(m => m.Id == id);
 
+            if (Ticket == null)
+            {
+                return NotFound();
+            }
+
             ViewModel = new TicketViewModel();
 
             ViewModel.Title = Ticket.Title;
@@ -62,11 +67,6 @@ namespace Tracker.Pages.Tickets
             ViewModel.TicketTypeId = Ticket.TicketTypeId;
             ViewModel.TicketStatusId = Ticket.TicketStatusId;
             ViewModel.AssigneeId = Ticket.AssigneeId;
-
-            if (Ticket == null)
-            {
-                return NotFound();
-            }
 
             TicketTypesList = new SelectList(ticketTypes, "Id", "Type");
             TicketStatusesList = new SelectList(ticketStatuses, "Id", "Status");
