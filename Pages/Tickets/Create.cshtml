@@ -47,11 +47,13 @@
 				</select>
 				<span asp-validation-for="TicketVM.Priority" class="text-danger"></span>
 			</div>
+			@*
 			<div class="form-group">
 				<label asp-for="TicketVM.TicketStatusId" class="control-label"></label>
 				<select asp-for="TicketVM.TicketStatusId" class="form-control" asp-items="@Model.TicketStatusSelectList"></select>
 				<span asp-validation-for="TicketVM.TicketStatusId" class="text-danger"></span>
 			</div>
+			*@
 			<div class="form-group">
 				<label asp-for="TicketVM.AssigneeId" class="control-label"></label>
 				<select asp-for="TicketVM.AssigneeId" class="form-control" asp-items="@Model.UserSelectList"></select>

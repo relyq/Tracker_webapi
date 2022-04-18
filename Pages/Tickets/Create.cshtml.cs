@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Tracker.Data;
 using Tracker.Models;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace Tracker.Pages.Tickets
 {
@@ -42,22 +43,26 @@ namespace Tracker.Pages.Tickets
 
         public async Task<IActionResult> OnGetAsync()
         {
+
             ProjectSelectList = new SelectList(ProjectList, "Id", "Name");
             TicketTypeSelectList = new SelectList(TicketTypeList, "Id", "Type");
-            TicketStatusSelectList = new SelectList(TicketStatusList, "Id", "Status");
+            // TicketStatusSelectList = new SelectList(TicketStatusList, "Id", "Status"); // ticket can only be created open for now
             UserSelectList = new SelectList(UserList, "Id", "UserName");
 
             return Page();
         }
-
         public class TicketViewModel
         {
+            [Display(Name = "Project")]
             public int ProjectId { get; set; }
             public string Title { get; set; }
             public string Description { get; set; }
+            [Display(Name = "Type")]
             public int TicketTypeId { get; set; }
             public int Priority { get; set; }
+            [Display(Name = "Status")]
             public int TicketStatusId { get; set; }
+            [Display(Name = "Assignee")]
             public string AssigneeId { get; set; }
         }
 
@@ -94,7 +99,7 @@ namespace Tracker.Pages.Tickets
 
             Ticket.Created = DateTime.Now;
 
-            if (!TryValidateModel(Ticket)) 
+            if (!TryValidateModel(Ticket))
             {
                 await OnGetAsync();
             }
