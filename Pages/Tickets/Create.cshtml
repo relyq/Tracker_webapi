@@ -1,0 +1,75 @@
+﻿@page
+@using Microsoft.AspNetCore.Identity
+@using Tracker.Models
+@inject UserManager<ApplicationUser> userManager
+@model Tracker.Pages.Tickets.CreateModel
+
+@{
+	ViewData["Title"] = "Create";
+}
+
+<h1>Create</h1>
+
+<h4>Ticket</h4>
+<hr />
+<div class="row">
+	<div class="col-md-4">
+		<form method="post">
+			<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+			<div class="form-group">
+				<label asp-for="TicketVM.ProjectId" class="control-label"></label>
+				<select asp-for="TicketVM.ProjectId" class="form-control" asp-items="@Model.ProjectSelectList"></select>
+				<span asp-validation-for="TicketVM.ProjectId" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="TicketVM.Title" class="control-label"></label>
+				<input asp-for="TicketVM.Title" class="form-control" />
+				<span asp-validation-for="TicketVM.Title" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="TicketVM.Description" class="control-label"></label>
+				<input asp-for="TicketVM.Description" class="form-control" />
+				<span asp-validation-for="TicketVM.Description" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="TicketVM.TicketTypeId" class="control-label"></label>
+				<select asp-for="TicketVM.TicketTypeId" class="form-control" asp-items="@Model.TicketTypeSelectList"></select>
+				<span asp-validation-for="TicketVM.TicketTypeId" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="TicketVM.Priority" class="control-label"></label>
+				<select asp-for="TicketVM.Priority" class="form-control">
+					<option value="1" selected>1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+					<option value="4">4</option>
+					<option value="5">5</option>
+				</select>
+				<span asp-validation-for="TicketVM.Priority" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="TicketVM.TicketStatusId" class="control-label"></label>
+				<select asp-for="TicketVM.TicketStatusId" class="form-control" asp-items="@Model.TicketStatusSelectList"></select>
+				<span asp-validation-for="TicketVM.TicketStatusId" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="TicketVM.AssigneeId" class="control-label"></label>
+				<select asp-for="TicketVM.AssigneeId" class="form-control" asp-items="@Model.UserSelectList"></select>
+				<span asp-validation-for="TicketVM.AssigneeId" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<input type="submit" value="Create" class="btn btn-primary" />
+			</div>
+		</form>
+	</div>
+</div>
+
+<div>
+	<a asp-page="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{
+	await Html.RenderPartialAsync("_ValidationScriptsPartial");
+}
+}

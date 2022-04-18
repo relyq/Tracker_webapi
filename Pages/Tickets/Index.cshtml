@@ -1,0 +1,84 @@
+﻿@page
+@model Tracker.Pages.Tickets.IndexModel
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-page="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                Project
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Ticket[0].Title)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Ticket[0].Description)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Ticket[0].Priority)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Ticket[0].Type.Type)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Ticket[0].Status.Status)
+            </th>
+            <th>
+                Submitter
+            </th>
+            <th>
+                Assignee
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Ticket[0].Created)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model.Ticket) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Project.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Title)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Description)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Priority)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Type.Type)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Status.Status)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Submitter.UserName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Assignee.UserName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Created)
+            </td>
+            <td>
+                <a asp-page="./Edit" asp-route-id="@item.Id">Edit</a> |
+                <a asp-page="./Details" asp-route-id="@item.Id">Details</a> |
+                <a asp-page="./Delete" asp-route-id="@item.Id">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

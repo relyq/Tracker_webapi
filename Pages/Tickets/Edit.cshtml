@@ -1,0 +1,65 @@
+﻿@page
+@model Tracker.Pages.Tickets.EditModel
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit</h1>
+
+<h4>Ticket</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+				<label asp-for="Ticket.Title" class="control-label"></label>
+				<input asp-for="ViewModel.Title" class="form-control" />
+				<span asp-validation-for="Ticket.Title" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Ticket.Description" class="control-label"></label>
+				<input asp-for="ViewModel.Description" class="form-control" />
+				<span asp-validation-for="Ticket.Description" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Ticket.Type" class="control-label"></label>
+				<select asp-for="ViewModel.TicketTypeId" class="form-control" asp-items="@Model.TicketTypesList"></select>
+				<span asp-validation-for="Ticket.TicketTypeId" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Ticket.Priority" class="control-label"></label>
+				<select asp-for="ViewModel.Priority" class="form-control">
+					<option value="1">1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+					<option value="4">4</option>
+					<option value="5">5</option>
+				</select>
+				<span asp-validation-for="Ticket.Priority" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Ticket.Status" class="control-label"></label>
+				<select asp-for="ViewModel.TicketStatusId" class="form-control" asp-items="@Model.TicketStatusesList"></select>
+				<span asp-validation-for="Ticket.TicketStatusId" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Ticket.Assignee" class="control-label"></label>
+				<select asp-for="ViewModel.AssigneeId" class="form-control" asp-items="@Model.UsersList"></select>
+				<span asp-validation-for="Ticket.AssigneeId" class="text-danger"></span>
+			</div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-page="./Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
