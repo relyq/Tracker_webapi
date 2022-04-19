@@ -41,8 +41,14 @@ namespace Tracker.Pages.Tickets
         public List<TicketStatus> TicketStatusList { get; set; }
         public List<ApplicationUser> UserList { get; set; }
 
-        public async Task<IActionResult> OnGetAsync()
+        public async Task<IActionResult> OnGetAsync(int? projectid)
         {
+            if(projectid == null)
+            {
+                return NotFound();
+            }
+
+            TicketVM.ProjectId = (int)projectid;
 
             ProjectSelectList = new SelectList(ProjectList, "Id", "Name");
             TicketTypeSelectList = new SelectList(TicketTypeList, "Id", "Type");
@@ -53,7 +59,6 @@ namespace Tracker.Pages.Tickets
         }
         public class TicketViewModel
         {
-            [Display(Name = "Project")]
             public int ProjectId { get; set; }
             public string Title { get; set; }
             public string Description { get; set; }
@@ -73,7 +78,7 @@ namespace Tracker.Pages.Tickets
         {
             if (!ModelState.IsValid)
             {
-                await OnGetAsync();
+                await OnGetAsync(TicketVM.ProjectId);
             }
 
             Ticket Ticket = new Ticket();
@@ -82,6 +87,7 @@ namespace Tracker.Pages.Tickets
             Ticket.Description = TicketVM.Description;
             Ticket.Priority = TicketVM.Priority;
 
+            // if i got here ProjectId is supposed to not be null
             Ticket.ProjectId = TicketVM.ProjectId;
             Ticket.TicketTypeId = TicketVM.TicketTypeId;
             Ticket.TicketStatusId = TicketVM.TicketStatusId;
@@ -92,7 +98,7 @@ namespace Tracker.Pages.Tickets
 
             Ticket.Project = ProjectList.FirstOrDefault(p => p.Id == Ticket.ProjectId);
             Ticket.Type = TicketTypeList.FirstOrDefault(t => t.Id == Ticket.TicketTypeId);
-            Ticket.Status = TicketStatusList.FirstOrDefault(s => s.Id == Ticket.TicketStatusId);
+            Ticket.Status = TicketStatusList.FirstOrDefault(s => s.Id == 1);
 
             Ticket.Submitter = UserList.FirstOrDefault(u => u.Id == Ticket.SubmitterId);
             Ticket.Assignee = UserList.FirstOrDefault(u => u.Id == Ticket.AssigneeId);
@@ -101,13 +107,13 @@ namespace Tracker.Pages.Tickets
 
             if (!TryValidateModel(Ticket))
             {
-                await OnGetAsync();
+                await OnGetAsync(TicketVM.ProjectId);
             }
 
             _context.Ticket.Add(Ticket);
             await _context.SaveChangesAsync();
 
-            return RedirectToPage("./Index");
+            return RedirectToPage("/Projects/Project", new { id = Ticket.ProjectId });
         }
     }
 }

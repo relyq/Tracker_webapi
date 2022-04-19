@@ -1,4 +1,4 @@
-﻿@page
+﻿@page "/Projects/{projectid?}/Tickets/Create"
 @using Microsoft.AspNetCore.Identity
 @using Tracker.Models
 @inject UserManager<ApplicationUser> userManager
@@ -16,11 +16,7 @@
 	<div class="col-md-4">
 		<form method="post">
 			<div asp-validation-summary="ModelOnly" class="text-danger"></div>
-			<div class="form-group">
-				<label asp-for="TicketVM.ProjectId" class="control-label"></label>
-				<select asp-for="TicketVM.ProjectId" class="form-control" asp-items="@Model.ProjectSelectList"></select>
-				<span asp-validation-for="TicketVM.ProjectId" class="text-danger"></span>
-			</div>
+			<input type="hidden" asp-for="TicketVM.ProjectId" value="@Model.TicketVM.ProjectId"/>
 			<div class="form-group">
 				<label asp-for="TicketVM.Title" class="control-label"></label>
 				<input asp-for="TicketVM.Title" class="form-control" />
@@ -48,11 +44,11 @@
 				<span asp-validation-for="TicketVM.Priority" class="text-danger"></span>
 			</div>
 			@*
-			<div class="form-group">
+				<div class="form-group">
 				<label asp-for="TicketVM.TicketStatusId" class="control-label"></label>
 				<select asp-for="TicketVM.TicketStatusId" class="form-control" asp-items="@Model.TicketStatusSelectList"></select>
 				<span asp-validation-for="TicketVM.TicketStatusId" class="text-danger"></span>
-			</div>
+				</div>
 			*@
 			<div class="form-group">
 				<label asp-for="TicketVM.AssigneeId" class="control-label"></label>
@@ -67,7 +63,7 @@
 </div>
 
 <div>
-	<a asp-page="Index">Back to List</a>
+	<a asp-page="/Projects/Project" asp-route-id="@Model.TicketVM.ProjectId">Back to List</a>
 </div>
 
 @section Scripts {

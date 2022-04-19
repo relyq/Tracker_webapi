@@ -1,4 +1,4 @@
-﻿@page
+﻿@page "/Projects/{projectid?}/Tickets/{id?}/Edit"
 @model Tracker.Pages.Tickets.EditModel
 
 @{
@@ -57,7 +57,7 @@
 </div>
 
 <div>
-    <a asp-page="./Index">Back to List</a>
+    <a asp-page="/Projects/Project" asp-route-id="@Model.Ticket.ProjectId">Back to List</a>
 </div>
 
 @section Scripts {

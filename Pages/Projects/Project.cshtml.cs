@@ -11,11 +11,11 @@ using Tracker.Models;
 
 namespace Tracker.Pages.Projects
 {
-    public class DetailsModel : PageModel
+    public class ProjectModel : PageModel
     {
         private readonly Tracker.Data.ApplicationDbContext _context;
 
-        public DetailsModel(Tracker.Data.ApplicationDbContext context)
+        public ProjectModel(Tracker.Data.ApplicationDbContext context)
         {
             _context = context;
         }
@@ -29,7 +29,12 @@ namespace Tracker.Pages.Projects
                 return NotFound();
             }
 
-            Project = await _context.Project.FirstOrDefaultAsync(m => m.Id == id);
+            Project = await _context.Project
+                .Include(p => p.Tickets).ThenInclude(t => t.Type)
+                .Include(p => p.Tickets).ThenInclude(t => t.Status)
+                .Include(p => p.Tickets).ThenInclude(t => t.Submitter)
+                .Include(p => p.Tickets).ThenInclude(t => t.Assignee)
+                .FirstOrDefaultAsync(m => m.Id == id);
 
             if (Project == null)
             {

@@ -9,18 +9,18 @@ using Microsoft.EntityFrameworkCore;
 using Tracker.Data;
 using Tracker.Models;
 
-namespace Tracker.Pages.Projects
+namespace Tracker.Pages.Tickets
 {
-    public class DetailsModel : PageModel
+    public class TicketModel : PageModel
     {
         private readonly Tracker.Data.ApplicationDbContext _context;
 
-        public DetailsModel(Tracker.Data.ApplicationDbContext context)
+        public TicketModel(Tracker.Data.ApplicationDbContext context)
         {
             _context = context;
         }
 
-        public Project Project { get; set; }
+        public Ticket Ticket { get; set; }
 
         public async Task<IActionResult> OnGetAsync(int? id)
         {
@@ -29,9 +29,14 @@ namespace Tracker.Pages.Projects
                 return NotFound();
             }
 
-            Project = await _context.Project.FirstOrDefaultAsync(m => m.Id == id);
+            Ticket = await _context.Ticket
+                .Include(t => t.Assignee)
+                .Include(t => t.Project)
+                .Include(t => t.Status)
+                .Include(t => t.Submitter)
+                .Include(t => t.Type).FirstOrDefaultAsync(m => m.Id == id);
 
-            if (Project == null)
+            if (Ticket == null)
             {
                 return NotFound();
             }

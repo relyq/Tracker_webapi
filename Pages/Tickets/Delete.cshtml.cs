@@ -60,7 +60,7 @@ namespace Tracker.Pages.Tickets
                 await _context.SaveChangesAsync();
             }
 
-            return RedirectToPage("./Index");
+            return RedirectToPage("/Projects/Project", new { id = Ticket.ProjectId });
         }
     }
 }
