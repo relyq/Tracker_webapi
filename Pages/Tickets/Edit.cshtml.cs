@@ -125,7 +125,7 @@ namespace Tracker.Pages.Tickets
                 }
             }
 
-            return RedirectToPage("/Projects/Project", new { id = Ticket.ProjectId });
+            return RedirectToPage("./Index", new { projectid = Ticket.ProjectId });
         }
 
         private bool TicketExists(int id)

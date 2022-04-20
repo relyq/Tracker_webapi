@@ -22,15 +22,22 @@ namespace Tracker.Pages.Tickets
 
         public IList<Ticket> Ticket { get;set; }
 
-        public async Task OnGetAsync()
+        public async Task<IActionResult> OnGetAsync(int? projectid)
         {
+            if (projectid == null)
+            {
+                return NotFound();
+            }
+
             Ticket = await _context.Ticket
-                .Include(t => t.Project)
+                .Where(t => t.ProjectId == projectid)
                 .Include(t => t.Type)
                 .Include(t => t.Status)
                 .Include(t => t.Submitter)
                 .Include(t => t.Assignee)
                 .ToListAsync();
+
+            return Page();
         }
     }
 }

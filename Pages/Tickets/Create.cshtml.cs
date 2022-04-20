@@ -113,7 +113,7 @@ namespace Tracker.Pages.Tickets
             _context.Ticket.Add(Ticket);
             await _context.SaveChangesAsync();
 
-            return RedirectToPage("/Projects/Project", new { id = Ticket.ProjectId });
+            return RedirectToPage("./Index", new { projectid = Ticket.ProjectId });
         }
     }
 }

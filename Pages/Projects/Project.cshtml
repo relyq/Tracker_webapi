@@ -13,81 +13,10 @@
 	<h4>@Html.DisplayFor(model => model.Project.Description)</h4>
 	<hr />
 	<dl class="row">
+		<div>
+			<a asp-page="./Index">Back to List</a> |
+			<a asp-page="./Edit" asp-route-id="@Model.Project.Id">Edit</a> |
+			<a asp-page="/Tickets/Index" asp-route-projectid="@Model.Project.Id">Tickets</a>
+		</div>
 	</dl>
-</div>
-<p>
-    <a asp-page="/Tickets/Create" asp-route-projectid="@Model.Project.Id">New Ticket</a>
-</p>
-<table class="table">
-	<thead>
-		<tr>
-			<th>
-				@Html.DisplayNameFor(model => model.Project.Tickets.FirstOrDefault().Title)
-			</th>
-			<th>
-				@Html.DisplayNameFor(model => model.Project.Tickets.FirstOrDefault().Description)
-			</th>
-			<th>
-				@Html.DisplayNameFor(model => model.Project.Tickets.FirstOrDefault().Priority)
-			</th>
-			<th>
-				@Html.DisplayNameFor(model => model.Project.Tickets.FirstOrDefault().Type)
-			</th>
-			<th>
-				@Html.DisplayNameFor(model => model.Project.Tickets.FirstOrDefault().Status)
-			</th>
-			<th>
-				@Html.DisplayNameFor(model => model.Project.Tickets.FirstOrDefault().Submitter)
-			</th>
-			<th>
-				@Html.DisplayNameFor(model => model.Project.Tickets.FirstOrDefault().Assignee)
-			</th>
-			<th>
-				@Html.DisplayNameFor(model => model.Project.Tickets.FirstOrDefault().Created)
-			</th>
-			<th></th>
-		</tr>
-	</thead>
-	<tbody>
-		@foreach (var item in Model.Project.Tickets)
-		{
-			<tr>
-				<td>
-					<a asp-page="/Tickets/Ticket" asp-route-id="@item.Id" asp-route-projectid="@Model.Project.Id">
-						@Html.DisplayFor(modelItem => item.Title)
-					</a>
-				</td>
-				<td>
-					@Html.DisplayFor(modelItem => item.Description)
-				</td>
-				<td>
-					@Html.DisplayFor(modelItem => item.Priority)
-				</td>
-				<td>
-					@Html.DisplayFor(modelItem => item.Type.Type)
-				</td>
-				<td>
-					@Html.DisplayFor(modelItem => item.Status.Status)
-				</td>
-				<td>
-					@Html.DisplayFor(modelItem => item.Submitter.UserName)
-				</td>
-				<td>
-					@Html.DisplayFor(modelItem => item.Assignee.UserName)
-				</td>
-				<td>
-					@Html.DisplayFor(modelItem => item.Created)
-				</td>
-				<td>
-					<a asp-page="/Tickets/Edit" asp-route-id="@item.Id" asp-route-projectid="@Model.Project.Id">Edit</a> |
-					<a asp-page="/Tickets/Details" asp-route-id="@item.Id" asp-route-projectid="@Model.Project.Id">Details</a> |
-					<a asp-page="/Tickets/Delete" asp-route-id="@item.Id" asp-route-projectid="@Model.Project.Id">Delete</a>
-				</td>
-			</tr>
-		}
-	</tbody>
-</table>
-<div>
-	<a asp-page="./Edit" asp-route-id="@Model.Project.Id">Edit</a> |
-	<a asp-page="./Index">Back to List</a>
 </div>
