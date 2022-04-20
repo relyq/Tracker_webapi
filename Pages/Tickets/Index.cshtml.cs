@@ -18,9 +18,11 @@ namespace Tracker.Pages.Tickets
         public IndexModel(Tracker.Data.ApplicationDbContext context)
         {
             _context = context;
+            OnlyOpenChecked = true;
         }
+        public bool OnlyOpenChecked { get; set; }
 
-        public IList<Ticket> Ticket { get;set; }
+        public IList<Ticket> Ticket { get; set; }
 
         public async Task<IActionResult> OnGetAsync(int? projectid)
         {
@@ -38,6 +40,11 @@ namespace Tracker.Pages.Tickets
                 .ToListAsync();
 
             return Page();
+        }
+
+        public void OnlyOpenOnChange()
+        {
+            Console.WriteLine("OnlyOpenOnChange()");
         }
     }
 }

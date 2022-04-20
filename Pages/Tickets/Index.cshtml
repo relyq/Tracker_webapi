@@ -7,10 +7,17 @@
 
 <h1>Index</h1>
 
-<p>
-	<a asp-page="/Projects/Project" asp-route-id="@Model.Ticket[0].ProjectId">Return to Project</a> |
-	<a asp-page="./Create" asp-route-projectid="@Model.Ticket[0].ProjectId">New Ticket</a>
-</p>
+<div>
+	<p>
+		<a asp-page="/Projects/Project" asp-route-id="@Model.Ticket[0].ProjectId">Return to Project</a> |
+		<a asp-page="./Create" asp-route-projectid="@Model.Ticket[0].ProjectId">New Ticket</a>
+	</p>
+</div>
+<div>
+	@Html.CheckBox("Only Open", new { @onchange="OnlyOpenOnChange()"})
+	<label for="open">Only Open</label>
+</div>
+@*
 <table class="table">
 	<thead>
 		<tr>
@@ -78,3 +85,6 @@
 		}
 	</tbody>
 </table>
+*@
+
+@await Html.PartialAsync("_TicketPartial", Model.Ticket)
