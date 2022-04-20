@@ -31,10 +31,12 @@ namespace Tracker.Models
         public int TicketStatusId { get; set; }
         public TicketStatus Status { get; set; }
 
+        [Display(Name = "Submitter")]
         [Required]
         public string SubmitterId { get; set; }
         public ApplicationUser Submitter { get; set; }
 
+        [Display(Name = "Assignee")]
         [Required]
         public string AssigneeId { get; set; }
         public ApplicationUser Assignee { get; set; }
