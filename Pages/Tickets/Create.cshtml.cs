@@ -41,7 +41,7 @@ namespace Tracker.Pages.Tickets
         public List<TicketStatus> TicketStatusList { get; set; }
         public List<ApplicationUser> UserList { get; set; }
 
-        public async Task<IActionResult> OnGetAsync(int? projectid)
+        public IActionResult OnGetAsync(int? projectid)
         {
             if(projectid == null)
             {
@@ -78,7 +78,7 @@ namespace Tracker.Pages.Tickets
         {
             if (!ModelState.IsValid)
             {
-                await OnGetAsync(TicketVM.ProjectId);
+                OnGetAsync(TicketVM.ProjectId);
             }
 
             Ticket Ticket = new Ticket();
@@ -107,7 +107,7 @@ namespace Tracker.Pages.Tickets
 
             if (!TryValidateModel(Ticket))
             {
-                await OnGetAsync(TicketVM.ProjectId);
+                OnGetAsync(TicketVM.ProjectId);
             }
 
             _context.Ticket.Add(Ticket);

@@ -5,86 +5,13 @@
 	ViewData["Title"] = "Index";
 }
 
-<h1>Index</h1>
+<h1>Tickets</h1>
 
 <div>
 	<p>
-		<a asp-page="/Projects/Project" asp-route-id="@Model.Ticket[0].ProjectId">Return to Project</a> |
-		<a asp-page="./Create" asp-route-projectid="@Model.Ticket[0].ProjectId">New Ticket</a>
+		<a asp-page="/Projects/Project" asp-route-id="@Model.Ticket[0].ProjectId" class="btn btn-primary">Return to Project</a> |
+		<a asp-page="./Create" asp-route-projectid="@Model.Ticket[0].ProjectId" class="btn btn-primary">New Ticket</a>
 	</p>
 </div>
-<div>
-	@Html.CheckBox("Only Open", new { @onchange="OnlyOpenOnChange()"})
-	<label for="open">Only Open</label>
-</div>
-@*
-<table class="table">
-	<thead>
-		<tr>
-			<th>
-				@Html.DisplayNameFor(model => model.Ticket[0].Title)
-			</th>
-			<th>
-				@Html.DisplayNameFor(model => model.Ticket[0].Description)
-			</th>
-			<th>
-				@Html.DisplayNameFor(model => model.Ticket[0].Priority)
-			</th>
-			<th>
-				@Html.DisplayNameFor(model => model.Ticket[0].Type.Type)
-			</th>
-			<th>
-				@Html.DisplayNameFor(model => model.Ticket[0].Status.Status)
-			</th>
-			<th>
-				@Html.DisplayNameFor(model => model.Ticket[0].Submitter)
-			</th>
-			<th>
-				@Html.DisplayNameFor(model => model.Ticket[0].Assignee)
-			</th>
-			<th>
-				@Html.DisplayNameFor(model => model.Ticket[0].Created)
-			</th>
-			<th></th>
-		</tr>
-	</thead>
-	<tbody>
-		@foreach (var item in Model.Ticket)
-		{
-			<tr>
-				<td>
-					<a asp-page="./Ticket" asp-route-id="@item.Id" asp-route-projectid="@Model.Ticket[0].ProjectId">
-						@Html.DisplayFor(modelItem => item.Title)
-					</a>
-				</td>
-				<td>
-					@Html.DisplayFor(modelItem => item.Description)
-				</td>
-				<td>
-					@Html.DisplayFor(modelItem => item.Priority)
-				</td>
-				<td>
-					@Html.DisplayFor(modelItem => item.Type.Type)
-				</td>
-				<td>
-					@Html.DisplayFor(modelItem => item.Status.Status)
-				</td>
-				<td>
-					@Html.DisplayFor(modelItem => item.Submitter.UserName)
-				</td>
-				<td>
-					@Html.DisplayFor(modelItem => item.Assignee.UserName)
-				</td>
-				<td>
-					@Html.DisplayFor(modelItem => item.Created)
-				</td>
-				<td>
-					<a asp-page="./Delete" asp-route-id="@item.Id" asp-route-projectid="@Model.Ticket[0].ProjectId">Delete</a>
-				</td>
-			</tr>
-		}
-	</tbody>
-</table>
-*@
 
-@await Html.PartialAsync("_TicketPartial", Model.Ticket)
+<component type="typeof(TicketList)" render-mode="Server" param-Tickets="@Model.Ticket" />

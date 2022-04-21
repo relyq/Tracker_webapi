@@ -1,0 +1,126 @@
+﻿@using Microsoft.EntityFrameworkCore
+@using Tracker.Models
+@inject Tracker.Data.ApplicationDbContext context
+
+<button class="btn btn-primary" @onclick="ShowOpen">Show open</button> | 
+<button class="btn btn-primary" @onclick="ShowClosed">Show closed</button> | 
+<button class="btn btn-primary" @onclick="ShowAll">Show all</button>
+
+@if (TicketsTable == null)
+{
+	<p><em>Loading...</em></p>
+}
+else
+{
+	<table class="table">
+		<thead>
+			<tr>
+				<th>
+					Title
+				</th>
+				<th>
+					Description
+				</th>
+				<th>
+					Priority
+				</th>
+				<th>
+					Type
+				</th>
+				<th>
+					Status
+				</th>
+				<th>
+					Submitter
+				</th>
+				<th>
+					Assignee
+				</th>
+				<th>
+					Created
+				</th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var item in TicketsTable)
+			{
+				<tr>
+					<td>
+						<a href="/Projects/@TicketsTable[0].ProjectId/Tickets/@item.Id">
+							@item.Title
+						</a>
+					</td>
+					<td>
+						@item.Description
+					</td>
+					<td>
+						@item.Priority
+					</td>
+					<td>
+						@item.Type.Type
+					</td>
+					<td>
+						@item.Status.Status
+					</td>
+					<td>
+						@item.Submitter.UserName
+					</td>
+					<td>
+						@item.Assignee.UserName
+					</td>
+					<td>
+						@item.Created
+					</td>
+					<td>
+						<a href="/Projects/@TicketsTable[0].ProjectId/Tickets/@item.Id/Delete">Delete</a>
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+
+
+@code {
+	[Parameter]
+	public IList<Ticket>? Tickets { get; set; }
+
+	public IList<Ticket> TicketsTable { get; set; }
+
+	protected override void OnInitialized()
+	{
+		base.OnInitialized();
+		if (Tickets != null)
+		{
+			TicketsTable = Tickets.Where(t => t.TicketStatusId == 1).ToList();
+		}
+	}
+
+	public void ShowOpen()
+	{
+		if (Tickets != null)
+		{
+			TicketsTable = Tickets.Where(t => t.TicketStatusId == 1).ToList();
+			StateHasChanged();
+		}
+	}
+
+	public void ShowClosed()
+	{
+		if (Tickets != null)
+		{
+			TicketsTable = Tickets.Where(t => t.TicketStatusId == 2).ToList();
+			StateHasChanged();
+		}
+	}
+
+	public void ShowAll()
+	{
+		if (Tickets != null)
+		{
+			TicketsTable = Tickets;
+			StateHasChanged();
+		}
+	}
+}

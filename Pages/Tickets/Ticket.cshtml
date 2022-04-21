@@ -52,13 +52,13 @@
 			@Html.DisplayNameFor(model => model.Ticket.Submitter)
 		</dt>
 		<dd class="col-sm-10">
-			@Html.DisplayFor(model => model.Ticket.Submitter.Id)
+			@Html.DisplayFor(model => model.Ticket.Submitter.UserName)
 		</dd>
 		<dt class="col-sm-2">
 			@Html.DisplayNameFor(model => model.Ticket.Assignee)
 		</dt>
 		<dd class="col-sm-10">
-			@Html.DisplayFor(model => model.Ticket.Assignee.Id)
+			@Html.DisplayFor(model => model.Ticket.Assignee.UserName)
 		</dd>
 		<dt class="col-sm-2">
 			@Html.DisplayNameFor(model => model.Ticket.Created)
@@ -75,7 +75,7 @@
 	</dl>
 </div>
 <div>
-	<a asp-page="./Index" asp-route-projectid="@Model.Ticket.ProjectId">Back to List</a> |
-	<a asp-page="./Edit" asp-route-id="@Model.Ticket.Id" asp-route-projectid="@Model.Ticket.ProjectId">Edit</a> |
-	<a asp-page="./Delete" asp-route-id="@Model.Ticket.Id" asp-route-projectid="@Model.Ticket.ProjectId">Delete</a>
+	<a asp-page="./Index" asp-route-projectid="@Model.Ticket.ProjectId" class="btn btn-primary">Back to List</a> |
+	<a asp-page="./Edit" asp-route-id="@Model.Ticket.Id" asp-route-projectid="@Model.Ticket.ProjectId" class="btn btn-primary">Edit</a> |
+	<a asp-page="./Delete" asp-route-id="@Model.Ticket.Id" asp-route-projectid="@Model.Ticket.ProjectId" class="btn btn-primary">Delete</a>
 </div>
