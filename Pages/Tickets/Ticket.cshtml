@@ -75,6 +75,10 @@
 	</dl>
 </div>
 <div>
+	<form method="post">
+		<input type="hidden" asp-for="Id" value="@Model.Ticket.Id"/>
+		<input type="submit" class="btn btn-primary" name="closeticket" value="Close" />
+	</form>
 	<a asp-page="./Index" asp-route-projectid="@Model.Ticket.ProjectId" class="btn btn-primary">Back to List</a> |
 	<a asp-page="./Edit" asp-route-id="@Model.Ticket.Id" asp-route-projectid="@Model.Ticket.ProjectId" class="btn btn-primary">Edit</a> |
 	<a asp-page="./Delete" asp-route-id="@Model.Ticket.Id" asp-route-projectid="@Model.Ticket.ProjectId" class="btn btn-primary">Delete</a>
