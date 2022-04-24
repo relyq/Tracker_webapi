@@ -15,6 +15,7 @@ namespace Tracker.Data
         public DbSet<TicketStatus> TicketStatus { get; set; }
         public DbSet<TicketType> TicketType { get; set; }
         public DbSet<Tracker.Models.Project> Project { get; set; }
+        public DbSet<Comment> Comment { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -22,6 +23,12 @@ namespace Tracker.Data
             builder.Entity<Ticket>()
                 .HasOne(t => t.Assignee)
                 .WithMany()
+                .IsRequired()
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<Comment>()
+                .HasOne(c => c.Ticket)
+                .WithMany(t => t.Comments)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.NoAction);
         }

@@ -35,7 +35,9 @@ namespace Tracker.Pages.Tickets
                 .Include(t => t.Project)
                 .Include(t => t.Status)
                 .Include(t => t.Submitter)
-                .Include(t => t.Type).FirstOrDefaultAsync(m => m.Id == id);
+                .Include(t => t.Comments)
+                .Include(t => t.Type)
+                .FirstOrDefaultAsync(m => m.Id == id);
 
             if (Ticket == null)
             {
@@ -44,6 +46,7 @@ namespace Tracker.Pages.Tickets
             return Page();
         }
 
+        // edit
         public async Task<IActionResult> OnPostAsync(int? Id)
         {
             if(Id == null)
@@ -56,7 +59,8 @@ namespace Tracker.Pages.Tickets
                 .Include(t => t.Project)
                 .Include(t => t.Status)
                 .Include(t => t.Submitter)
-                .Include(t => t.Type).FirstOrDefaultAsync(m => m.Id == Id);
+                .Include(t => t.Type)
+                .FirstOrDefaultAsync(m => m.Id == Id);
 
             if(Ticket == null)
             {

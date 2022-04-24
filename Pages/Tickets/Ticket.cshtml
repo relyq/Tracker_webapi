@@ -74,6 +74,7 @@
 		</dd>
 	</dl>
 </div>
+
 <div>
 	<form method="post">
 		<input type="hidden" asp-for="Id" value="@Model.Ticket.Id"/>
@@ -82,4 +83,8 @@
 	<a asp-page="./Index" asp-route-projectid="@Model.Ticket.ProjectId" class="btn btn-primary">Back to List</a> |
 	<a asp-page="./Edit" asp-route-id="@Model.Ticket.Id" asp-route-projectid="@Model.Ticket.ProjectId" class="btn btn-primary">Edit</a> |
 	<a asp-page="./Delete" asp-route-id="@Model.Ticket.Id" asp-route-projectid="@Model.Ticket.ProjectId" class="btn btn-primary">Delete</a>
+</div>
+
+<div>
+	<component type="typeof(Comments.Comments)" render-mode="Server" param-CommentList="@Model.Ticket.Comments.ToList()" />
 </div>

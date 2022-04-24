@@ -11,6 +11,8 @@ namespace Tracker.Models
         [StringLength(50)]
         public string? LastName { get; set; }
 
+        public ICollection<Comment>? Comments { get; set; }
+
         [Required]
         [DataType(DataType.DateTime)]
         public DateTime Created { get; set; }

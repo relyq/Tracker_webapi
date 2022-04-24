@@ -41,6 +41,8 @@ namespace Tracker.Models
         public string AssigneeId { get; set; }
         public ApplicationUser Assignee { get; set; }
 
+        public ICollection<Comment>? Comments { get; set; }
+
         [Required]
         [DataType(DataType.DateTime)]
         public DateTime Created { get; set; }

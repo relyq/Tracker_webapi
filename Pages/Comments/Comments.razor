@@ -1,0 +1,41 @@
+﻿@using Microsoft.EntityFrameworkCore
+@using Tracker.Models
+
+<h3>Comments</h3>
+
+<form method="post">
+	<input @bind="@CommentContent" class="form-control" />
+	<div class="form-group">
+		<input type="submit" value="Add Comment" class="btn btn-primary" @onclick="AddComment" />
+	</div>
+</form>
+
+@if (CommentList == null)
+{
+	<p><em>Loading...</em></p>
+}
+else
+{
+	<section>
+		<div>
+			<h5>Author</h5>
+			<p>comment</p>
+		</div>
+	</section>
+}
+
+@code {
+	[Parameter]
+	public IList<Comment>? CommentList { get; set; }
+
+	public string CommentContent { get; set; }
+
+	public void AddComment()
+	{
+		if(!string.IsNullOrEmpty(CommentContent))
+		{
+		}
+			StateHasChanged();
+	}
+
+}
