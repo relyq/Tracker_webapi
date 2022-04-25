@@ -14,6 +14,8 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
+builder.Services.AddHttpClient();
+
 builder.Services.AddServerSideBlazor();
 builder.Services.AddSignalR(e =>
 {
@@ -25,6 +27,8 @@ builder.Services.AddRazorPages(options =>
     options.Conventions.AuthorizeFolder("/Projects");
     options.Conventions.AuthorizeFolder("/Tickets");
 });
+
+builder.Services.AddControllers();
 
 var app = builder.Build();
 
@@ -49,6 +53,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapRazorPages();
+
+app.MapControllers();
 
 app.UseEndpoints(endpoints =>
 {

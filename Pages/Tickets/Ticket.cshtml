@@ -86,5 +86,5 @@
 </div>
 
 <div>
-	<component type="typeof(Comments.Comments)" render-mode="Server" param-CommentList="@Model.Ticket.Comments.ToList()" />
+	<component type="typeof(Comments.Comments)" render-mode="Server" param-CommentList="@Model.Ticket.Comments.ToList()" param-TicketId="@Model.Ticket.Id" />
 </div>

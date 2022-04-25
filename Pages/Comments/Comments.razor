@@ -1,9 +1,17 @@
 ﻿@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Text.Json
+@using System.Text.Json.Serialization;
 @using Tracker.Models
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> userManager
+@inject IHttpClientFactory ClientFactory
+@inject Tracker.Data.ApplicationDbContext context
 
 <h3>Comments</h3>
 
-<form method="post">
+<form>
 	<input @bind="@CommentContent" class="form-control" />
 	<div class="form-group">
 		<input type="submit" value="Add Comment" class="btn btn-primary" @onclick="AddComment" />
@@ -17,25 +25,66 @@
 else
 {
 	<section>
-		<div>
-			<h5>Author</h5>
-			<p>comment</p>
-		</div>
+		@foreach (var comment in CommentList)
+		{
+			<div>
+				<h5>@comment.AuthorId</h5>
+				<p>@comment.Content</p>
+			</div>
+		}
 	</section>
 }
 
 @code {
 	[Parameter]
 	public IList<Comment>? CommentList { get; set; }
+	[Parameter]
+	public int TicketId { get; set; }
 
 	public string CommentContent { get; set; }
 
-	public void AddComment()
+	public async Task AddComment()
 	{
-		if(!string.IsNullOrEmpty(CommentContent))
+		if (string.IsNullOrEmpty(CommentContent))
 		{
+			return;
 		}
-			StateHasChanged();
+
+		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		var user = authState.User;
+
+		if (!user.Identity.IsAuthenticated)
+		{
+			return;
+		}
+
+		var currentUserId = userManager.GetUserId(user);
+
+		CommentDto Comment = new();
+
+		Comment.AuthorId = currentUserId;
+		Comment.TicketId = TicketId;
+		Comment.Content = CommentContent;
+		Comment.Created = DateTime.Now;
+
+		var client = ClientFactory.CreateClient();
+
+		client.BaseAddress = new Uri("https://localhost:7004/");
+
+		var response = await client.PostAsJsonAsync("api/Comments", Comment);
+
+		Console.WriteLine("Request Message Information:- \n\n" + response.RequestMessage + "\n");
+		Console.WriteLine("Response Message Header \n\n" + response.Content.Headers + "\n");
+		// Get the response
+		var customerJsonString = await response.Content.ReadAsStringAsync();
+		Console.WriteLine("Your response data is: " + customerJsonString);
+
+		if (!response.IsSuccessStatusCode)
+		{
+			return;
+		}
+
+		StateHasChanged();
 	}
 
 }
