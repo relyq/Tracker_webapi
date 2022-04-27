@@ -7,11 +7,9 @@
 
 <h1>Tickets</h1>
 
-<div>
-	<p>
-		<a asp-page="/Projects/Project" asp-route-id="@Model.Ticket[0].ProjectId" class="btn btn-primary">Return to Project</a> |
-		<a asp-page="./Create" asp-route-projectid="@Model.Ticket[0].ProjectId" class="btn btn-primary">New Ticket</a>
-	</p>
+<div style="display: flex; margin-bottom: 12px;">
+	<a asp-page="/Projects/Project" asp-route-id="@Model.Ticket[0].ProjectId" class="btn btn-outline-primary"> Return to Project</a> 
+	<a asp-page="./Create" asp-route-projectid="@Model.Ticket[0].ProjectId" class="btn btn-primary" style="margin-left: auto;">New Ticket +</a>
 </div>
 
 <component type="typeof(TicketList)" render-mode="Server" param-Tickets="@Model.Ticket" />

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using AutoMapper;
 using Tracker.Data;
 using Tracker.Models;
 
@@ -29,6 +30,17 @@ builder.Services.AddRazorPages(options =>
 });
 
 builder.Services.AddControllers();
+
+var config = new MapperConfiguration(cfg =>
+{
+    cfg.AddProfile<Tracker.Pages.MappingProfile>();
+});
+
+config.AssertConfigurationIsValid();
+
+var mapper = config.CreateMapper();
+
+builder.Services.AddAutoMapper(typeof(Program));
 
 var app = builder.Build();
 

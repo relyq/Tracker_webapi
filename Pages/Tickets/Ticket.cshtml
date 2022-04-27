@@ -13,78 +13,73 @@
 	<hr />
 	<dl class="row">
 		<dt class="col-sm-2">
-			@Html.DisplayNameFor(model => model.Ticket.Project)
+			@Html.DisplayNameFor(model => model.TicketDto.Title)
 		</dt>
 		<dd class="col-sm-10">
-			@Html.DisplayFor(model => model.Ticket.Project.Name)
+			@Html.DisplayFor(model => model.TicketDto.Title)
 		</dd>
 		<dt class="col-sm-2">
-			@Html.DisplayNameFor(model => model.Ticket.Title)
+			@Html.DisplayNameFor(model => model.TicketDto.Description)
 		</dt>
 		<dd class="col-sm-10">
-			@Html.DisplayFor(model => model.Ticket.Title)
+			@Html.DisplayFor(model => model.TicketDto.Description)
 		</dd>
 		<dt class="col-sm-2">
-			@Html.DisplayNameFor(model => model.Ticket.Description)
+			@Html.DisplayNameFor(model => model.TicketDto.Priority)
 		</dt>
 		<dd class="col-sm-10">
-			@Html.DisplayFor(model => model.Ticket.Description)
+			@Html.DisplayFor(model => model.TicketDto.Priority)
 		</dd>
 		<dt class="col-sm-2">
-			@Html.DisplayNameFor(model => model.Ticket.Priority)
+			@Html.DisplayNameFor(model => model.TicketDto.Type)
 		</dt>
 		<dd class="col-sm-10">
-			@Html.DisplayFor(model => model.Ticket.Priority)
+			@Html.DisplayFor(model => model.TicketDto.Type)
 		</dd>
 		<dt class="col-sm-2">
-			@Html.DisplayNameFor(model => model.Ticket.Type)
+			@Html.DisplayNameFor(model => model.TicketDto.Status)
 		</dt>
 		<dd class="col-sm-10">
-			@Html.DisplayFor(model => model.Ticket.Type.Type)
+			@Html.DisplayFor(model => model.TicketDto.Status)
 		</dd>
 		<dt class="col-sm-2">
-			@Html.DisplayNameFor(model => model.Ticket.Status)
+			@Html.DisplayNameFor(model => model.TicketDto.SubmitterUsername)
 		</dt>
 		<dd class="col-sm-10">
-			@Html.DisplayFor(model => model.Ticket.Status.Status)
+			@Html.DisplayFor(model => model.TicketDto.SubmitterUsername)
 		</dd>
 		<dt class="col-sm-2">
-			@Html.DisplayNameFor(model => model.Ticket.Submitter)
+			@Html.DisplayNameFor(model => model.TicketDto.AssigneeUsername)
 		</dt>
 		<dd class="col-sm-10">
-			@Html.DisplayFor(model => model.Ticket.Submitter.UserName)
+			@Html.DisplayFor(model => model.TicketDto.AssigneeUsername)
 		</dd>
 		<dt class="col-sm-2">
-			@Html.DisplayNameFor(model => model.Ticket.Assignee)
+			@Html.DisplayNameFor(model => model.TicketDto.Created)
 		</dt>
 		<dd class="col-sm-10">
-			@Html.DisplayFor(model => model.Ticket.Assignee.UserName)
+			@Html.DisplayFor(model => model.TicketDto.Created)
 		</dd>
 		<dt class="col-sm-2">
-			@Html.DisplayNameFor(model => model.Ticket.Created)
+			@Html.DisplayNameFor(model => model.TicketDto.Closed)
 		</dt>
 		<dd class="col-sm-10">
-			@Html.DisplayFor(model => model.Ticket.Created)
-		</dd>
-		<dt class="col-sm-2">
-			@Html.DisplayNameFor(model => model.Ticket.Closed)
-		</dt>
-		<dd class="col-sm-10">
-			@Html.DisplayFor(model => model.Ticket.Closed)
+			@Html.DisplayFor(model => model.TicketDto.Closed)
 		</dd>
 	</dl>
 </div>
 
 <div>
 	<form method="post">
-		<input type="hidden" asp-for="Id" value="@Model.Ticket.Id"/>
+		<input type="hidden" asp-for="Id" value="@Model.TicketDto.Id"/>
 		<input type="submit" class="btn btn-primary" name="closeticket" value="Close" />
 	</form>
-	<a asp-page="./Index" asp-route-projectid="@Model.Ticket.ProjectId" class="btn btn-primary">Back to List</a> |
-	<a asp-page="./Edit" asp-route-id="@Model.Ticket.Id" asp-route-projectid="@Model.Ticket.ProjectId" class="btn btn-primary">Edit</a> |
-	<a asp-page="./Delete" asp-route-id="@Model.Ticket.Id" asp-route-projectid="@Model.Ticket.ProjectId" class="btn btn-primary">Delete</a>
+	<br />
+	<a asp-page="./Index" asp-route-projectid="@Model.TicketDto.ProjectId" class="btn btn-primary">Back to List</a> |
+	<a asp-page="./Edit" asp-route-id="@Model.TicketDto.Id" asp-route-projectid="@Model.TicketDto.ProjectId" class="btn btn-primary">Edit</a> |
+	<a asp-page="./Delete" asp-route-id="@Model.TicketDto.Id" asp-route-projectid="@Model.TicketDto.ProjectId" class="btn btn-primary">Delete</a>
 </div>
 
 <div>
-	<component type="typeof(Comments.Comments)" render-mode="Server" param-CommentList="@Model.Ticket.Comments.ToList()" param-TicketId="@Model.Ticket.Id" />
+	<component type="typeof(Comments.Comments)" render-mode="Server" param-TicketId="@Model.TicketDto.Id" />
 </div>

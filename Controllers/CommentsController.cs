@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Tracker.Data;
 using Tracker.Models;
+using AutoMapper;
 
 namespace Tracker.Controllers
 {
@@ -16,10 +17,12 @@ namespace Tracker.Controllers
     public class CommentsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IMapper _mapper;
 
-        public CommentsController(ApplicationDbContext context)
+        public CommentsController(ApplicationDbContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         // GET: api/Comments

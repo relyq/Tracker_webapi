@@ -8,19 +8,22 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Tracker.Data;
 using Tracker.Models;
+using AutoMapper;
 
 namespace Tracker.Pages.Tickets
 {
     public class TicketModel : PageModel
     {
         private readonly Tracker.Data.ApplicationDbContext _context;
+        private readonly IMapper _mapper;
 
-        public TicketModel(Tracker.Data.ApplicationDbContext context)
+        public TicketModel(Tracker.Data.ApplicationDbContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
-        public Ticket Ticket { get; set; }
+        public TicketDto TicketDto { get; set; }
         public int Id { get; set; }
 
         public async Task<IActionResult> OnGetAsync(int? id)
@@ -30,16 +33,14 @@ namespace Tracker.Pages.Tickets
                 return NotFound();
             }
 
-            Ticket = await _context.Ticket
-                .Include(t => t.Assignee)
-                .Include(t => t.Project)
-                .Include(t => t.Status)
-                .Include(t => t.Submitter)
-                .Include(t => t.Comments)
-                .Include(t => t.Type)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            TicketDto = _mapper.Map<TicketDto>(await _context.Ticket.Include(t => t.Comments).FirstOrDefaultAsync(t => t.Id == id));
 
-            if (Ticket == null)
+            TicketDto.Status = (await _context.TicketStatus.FindAsync(TicketDto.TicketStatusId)).Status;
+            TicketDto.Type = (await _context.TicketType.FindAsync(TicketDto.TicketTypeId)).Type;
+            TicketDto.SubmitterUsername = (await _context.Users.FindAsync(TicketDto.SubmitterId)).UserName;
+            TicketDto.AssigneeUsername = (await _context.Users.FindAsync(TicketDto.AssigneeId)).UserName;
+
+            if (TicketDto == null)
             {
                 return NotFound();
             }
@@ -54,22 +55,25 @@ namespace Tracker.Pages.Tickets
                 return NotFound();
             }
 
-            Ticket = await _context.Ticket
-                .Include(t => t.Assignee)
-                .Include(t => t.Project)
-                .Include(t => t.Status)
-                .Include(t => t.Submitter)
-                .Include(t => t.Type)
-                .FirstOrDefaultAsync(m => m.Id == Id);
+            TicketDto = _mapper.Map<TicketDto>(await _context.Ticket.FirstOrDefaultAsync(t => t.Id == Id));
 
-            if(Ticket == null)
+            if(TicketDto == null)
             {
                 return NotFound();
             }
-            if(Ticket.TicketStatusId == 2)
+            if(TicketDto.TicketStatusId == 2)
             {
                 return Page();
             }
+
+            // not needed
+            TicketDto.TicketStatusId = 2;
+            TicketDto.Closed = DateTime.Now;
+
+            Ticket Ticket = new Ticket();
+
+            // does this work? do i need to include childs?
+            Ticket = await _context.Ticket.FindAsync(TicketDto.Id);
 
             Ticket.TicketStatusId = 2;
             Ticket.Closed = DateTime.Now;
@@ -82,7 +86,7 @@ namespace Tracker.Pages.Tickets
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!TicketExists(Ticket.Id))
+                if (!TicketExists(TicketDto.Id))
                 {
                     return NotFound();
                 }
@@ -92,7 +96,7 @@ namespace Tracker.Pages.Tickets
                 }
             }
 
-            return await OnGetAsync(Ticket.Id);
+            return await OnGetAsync(TicketDto.Id);
         }
 
         private bool TicketExists(int id)

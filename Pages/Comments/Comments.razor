@@ -20,7 +20,9 @@
 
 @if (CommentList == null)
 {
-	<p><em>Loading...</em></p>
+	<div style="text-align: center;">
+		<h3 style="font-size: 20px; font-weight: 600; color: #333;">Loading...</h3>
+	</div>
 }
 else
 {
@@ -28,25 +30,38 @@ else
 		@foreach (var comment in CommentList)
 		{
 			<div>
-				<h5>@comment.AuthorId</h5>
+				<h5>@comment.AuthorUsername</h5>
 				<p>@comment.Content</p>
 			</div>
 		}
 	</section>
 }
 
+
 @code {
-	[Parameter]
-	public IList<Comment>? CommentList { get; set; }
 	[Parameter]
 	public int TicketId { get; set; }
 
+	public IList<CommentDto>? CommentList { get; set; }
+
 	public string CommentContent { get; set; }
+
+	protected override async Task OnInitializedAsync()
+	{
+		await base.OnInitializedAsync();
+
+		var client = ClientFactory.CreateClient();
+
+		client.BaseAddress = new Uri("https://localhost:7004/");
+
+		CommentList = await client.GetFromJsonAsync<IList<CommentDto>>($"api/Tickets/{TicketId}/Comments");
+	}
 
 	public async Task AddComment()
 	{
 		if (string.IsNullOrEmpty(CommentContent))
 		{
+			Console.WriteLine("Error 1");
 			return;
 		}
 
@@ -55,36 +70,37 @@ else
 
 		if (!user.Identity.IsAuthenticated)
 		{
+			Console.WriteLine("Error 2");
 			return;
 		}
 
-		var currentUserId = userManager.GetUserId(user);
+		CommentDto Comment = new CommentDto();
 
-		CommentDto Comment = new();
-
-		Comment.AuthorId = currentUserId;
+		Comment.AuthorId = userManager.GetUserId(user);
+		Comment.AuthorUsername = userManager.GetUserName(user);
 		Comment.TicketId = TicketId;
 		Comment.Content = CommentContent;
 		Comment.Created = DateTime.Now;
 
 		var client = ClientFactory.CreateClient();
 
+		StateHasChanged();
 		client.BaseAddress = new Uri("https://localhost:7004/");
 
-		var response = await client.PostAsJsonAsync("api/Comments", Comment);
-
-		Console.WriteLine("Request Message Information:- \n\n" + response.RequestMessage + "\n");
-		Console.WriteLine("Response Message Header \n\n" + response.Content.Headers + "\n");
-		// Get the response
-		var customerJsonString = await response.Content.ReadAsStringAsync();
-		Console.WriteLine("Your response data is: " + customerJsonString);
-
-		if (!response.IsSuccessStatusCode)
+		await Task.Run(async () =>
 		{
-			return;
-		}
+			var response = await client.PostAsJsonAsync($"api/Tickets/{TicketId}/Comments", Comment);
 
-		StateHasChanged();
+			if (!response.IsSuccessStatusCode)
+			{
+				Console.WriteLine("Error 3");
+				return;
+			}
+
+			CommentList = JsonSerializer.Deserialize<IList<CommentDto>>(response.Content.ReadAsStringAsync().Result);
+			StateHasChanged();
+		});
+
 	}
 
 }
