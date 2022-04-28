@@ -30,7 +30,7 @@ else
 		@foreach (var comment in CommentList)
 		{
 			<div>
-				<h5>@comment.AuthorUsername</h5>
+				<h5 style="display:inline;">@comment.AuthorUsername</h5> <p style="display:inline;"> - @comment.Created</p>
 				<p>@comment.Content</p>
 			</div>
 		}
@@ -55,6 +55,8 @@ else
 		client.BaseAddress = new Uri("https://localhost:7004/");
 
 		CommentList = await client.GetFromJsonAsync<IList<CommentDto>>($"api/Tickets/{TicketId}/Comments");
+
+		((List<CommentDto>)CommentList).Sort((x, y) => DateTime.Compare(y.Created, x.Created));
 	}
 
 	public async Task AddComment()
@@ -87,20 +89,19 @@ else
 		StateHasChanged();
 		client.BaseAddress = new Uri("https://localhost:7004/");
 
-		await Task.Run(async () =>
+
+		var response = await client.PostAsJsonAsync($"api/Tickets/{TicketId}/Comments", Comment);
+
+		if (!response.IsSuccessStatusCode)
 		{
-			var response = await client.PostAsJsonAsync($"api/Tickets/{TicketId}/Comments", Comment);
+			Console.WriteLine("Error 3");
+			return;
+		}
 
-			if (!response.IsSuccessStatusCode)
-			{
-				Console.WriteLine("Error 3");
-				return;
-			}
+		CommentList = JsonSerializer.Deserialize<IList<CommentDto>>(response.Content.ReadAsStringAsync().Result);
 
-			CommentList = JsonSerializer.Deserialize<IList<CommentDto>>(response.Content.ReadAsStringAsync().Result);
-			StateHasChanged();
-		});
-
+		// can't be null if new comment is posted
+		((List<CommentDto>)CommentList).Sort((x, y) => DateTime.Compare(y.Created, x.Created));
 	}
 
 }

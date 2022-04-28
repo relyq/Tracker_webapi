@@ -9,6 +9,7 @@ namespace Tracker.Pages
         {
             CreateMap<Ticket, TicketDto>();
             CreateMap<Comment, CommentDto>();
+            CreateMap<Project, ProjectDto>();
         }
     }
 }

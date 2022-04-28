@@ -9,20 +9,23 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Tracker.Data;
 using Tracker.Models;
+using AutoMapper;
 
 namespace Tracker.Pages.Projects
 {
     public class EditModel : PageModel
     {
         private readonly Tracker.Data.ApplicationDbContext _context;
+        private readonly IMapper _mapper;
 
-        public EditModel(Tracker.Data.ApplicationDbContext context)
+        public EditModel(Tracker.Data.ApplicationDbContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         [BindProperty]
-        public Project Project { get; set; }
+        public ProjectDto ProjectDto { get; set; }
 
         public async Task<IActionResult> OnGetAsync(int? id)
         {
@@ -31,9 +34,9 @@ namespace Tracker.Pages.Projects
                 return NotFound();
             }
 
-            Project = await _context.Project.FirstOrDefaultAsync(m => m.Id == id);
+            ProjectDto = _mapper.Map<ProjectDto>(await _context.Project.FirstOrDefaultAsync(m => m.Id == id));
 
-            if (Project == null)
+            if (ProjectDto == null)
             {
                 return NotFound();
             }
@@ -42,12 +45,22 @@ namespace Tracker.Pages.Projects
 
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see https://aka.ms/RazorPagesCRUD.
-        public async Task<IActionResult> OnPostAsync()
+        public async Task<IActionResult> OnPostAsync(ProjectDto projectDto)
         {
             if (!ModelState.IsValid)
             {
                 return Page();
             }
+
+            Project Project = await _context.Project.FindAsync(projectDto.Id);
+
+            if(Project == null)
+            {
+                return NotFound();
+            }
+
+            Project.Name = projectDto.Name;
+            Project.Description = projectDto.Description;
 
             _context.Attach(Project).State = EntityState.Modified;
 

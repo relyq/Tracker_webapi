@@ -33,17 +33,20 @@ namespace Tracker.Pages.Tickets
                 return NotFound();
             }
 
-            TicketDto = _mapper.Map<TicketDto>(await _context.Ticket.Include(t => t.Comments).FirstOrDefaultAsync(t => t.Id == id));
-
-            TicketDto.Status = (await _context.TicketStatus.FindAsync(TicketDto.TicketStatusId)).Status;
-            TicketDto.Type = (await _context.TicketType.FindAsync(TicketDto.TicketTypeId)).Type;
-            TicketDto.SubmitterUsername = (await _context.Users.FindAsync(TicketDto.SubmitterId)).UserName;
-            TicketDto.AssigneeUsername = (await _context.Users.FindAsync(TicketDto.AssigneeId)).UserName;
+            TicketDto = _mapper.Map<TicketDto>(
+                await _context.Ticket
+                .Include(t => t.Comments)
+                .Include(t => t.Type)
+                .Include(t => t.Status)
+                .Include(t => t.Submitter)
+                .Include(t => t.Assignee)
+                .FirstOrDefaultAsync(t => t.Id == id));
 
             if (TicketDto == null)
             {
                 return NotFound();
             }
+
             return Page();
         }
 
@@ -55,25 +58,10 @@ namespace Tracker.Pages.Tickets
                 return NotFound();
             }
 
-            TicketDto = _mapper.Map<TicketDto>(await _context.Ticket.FirstOrDefaultAsync(t => t.Id == Id));
-
-            if(TicketDto == null)
-            {
-                return NotFound();
-            }
-            if(TicketDto.TicketStatusId == 2)
-            {
-                return Page();
-            }
-
-            // not needed
-            TicketDto.TicketStatusId = 2;
-            TicketDto.Closed = DateTime.Now;
-
             Ticket Ticket = new Ticket();
 
             // does this work? do i need to include childs?
-            Ticket = await _context.Ticket.FindAsync(TicketDto.Id);
+            Ticket = await _context.Ticket.FindAsync(Id);
 
             Ticket.TicketStatusId = 2;
             Ticket.Closed = DateTime.Now;
@@ -86,7 +74,7 @@ namespace Tracker.Pages.Tickets
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!TicketExists(TicketDto.Id))
+                if (!TicketExists((int)Id))
                 {
                     return NotFound();
                 }
@@ -96,7 +84,7 @@ namespace Tracker.Pages.Tickets
                 }
             }
 
-            return await OnGetAsync(TicketDto.Id);
+            return await OnGetAsync(Id);
         }
 
         private bool TicketExists(int id)

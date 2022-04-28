@@ -38,7 +38,6 @@ else
 				<th>
 					Created
 				</th>
-				<th></th>
 			</tr>
 		</thead>
 		<tbody>
@@ -46,7 +45,7 @@ else
 			{
 				<tr>
 					<td>
-						<a href="/Projects/@TicketsTable[0].ProjectId/Tickets/@item.Id">
+						<a href="/Projects/@TicketsTable.FirstOrDefault().ProjectId/Tickets/@item.Id" class="btn btn-outline-primary">
 							@item.Title
 						</a>
 					</td>
@@ -57,22 +56,19 @@ else
 						@item.Priority
 					</td>
 					<td>
-						@item.Type.Type
+						@item.Type
 					</td>
 					<td>
-						@item.Status.Status
+						@item.Status
 					</td>
 					<td>
-						@item.Submitter.UserName
+						@item.SubmitterUsername
 					</td>
 					<td>
-						@item.Assignee.UserName
+						@item.AssigneeUsername
 					</td>
 					<td>
 						@item.Created
-					</td>
-					<td>
-						<a href="/Projects/@TicketsTable[0].ProjectId/Tickets/@item.Id/Delete">Delete</a>
 					</td>
 				</tr>
 			}
@@ -83,9 +79,9 @@ else
 
 @code {
 	[Parameter]
-	public IList<Ticket>? Tickets { get; set; }
+	public IEnumerable<TicketDto>? Tickets { get; set; }
 
-	public IList<Ticket> TicketsTable { get; set; }
+	public IEnumerable<TicketDto> TicketsTable { get; set; }
 
 	protected override void OnInitialized()
 	{

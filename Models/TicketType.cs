@@ -9,5 +9,10 @@ namespace Tracker.Models
         [Required]
         [StringLength(50)]
         public string Type { get; set; }
+
+        public override string ToString()
+        {
+            return Type;
+        }
     }
 }

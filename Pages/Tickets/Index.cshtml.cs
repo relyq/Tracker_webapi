@@ -8,21 +8,23 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Tracker.Data;
 using Tracker.Models;
+using AutoMapper;
 
 namespace Tracker.Pages.Tickets
 {
     public class IndexModel : PageModel
     {
         private readonly Tracker.Data.ApplicationDbContext _context;
+        private readonly IMapper _mapper;
 
-        public IndexModel(Tracker.Data.ApplicationDbContext context)
+        public IndexModel(Tracker.Data.ApplicationDbContext context, IMapper mapper)
         {
             _context = context;
-            OnlyOpenChecked = true;
+            _mapper = mapper;
         }
-        public bool OnlyOpenChecked { get; set; }
 
-        public IList<Ticket> Ticket { get; set; }
+        public IEnumerable<TicketDto> TicketDto { get; set; }
+        public int ProjectId { get; set; }
 
         public async Task<IActionResult> OnGetAsync(int? projectid)
         {
@@ -31,20 +33,20 @@ namespace Tracker.Pages.Tickets
                 return NotFound();
             }
 
-            Ticket = await _context.Ticket
-                .Where(t => t.ProjectId == projectid)
+            ProjectId = (int)projectid;
+
+            TicketDto = _mapper.Map<IEnumerable<TicketDto>>(
+                await _context.Ticket
+                .Where(t => t.ProjectId == ProjectId)
                 .Include(t => t.Type)
                 .Include(t => t.Status)
                 .Include(t => t.Submitter)
                 .Include(t => t.Assignee)
-                .ToListAsync();
+                .ToListAsync());
+
+            ((List<TicketDto>)TicketDto).Sort((x, y) => DateTime.Compare(y.Created, x.Created));
 
             return Page();
-        }
-
-        public void OnlyOpenOnChange()
-        {
-            Console.WriteLine("OnlyOpenOnChange()");
         }
     }
 }
