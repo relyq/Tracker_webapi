@@ -9,13 +9,9 @@ namespace Tracker.Models
         [Required]
         public int TicketId { get; set; }
 
-        [Required]
         public string AuthorId { get; set; }
-        public string AuthorUsername { get; set; }
 
         public int? ParentId { get; set; }
-
-        public ICollection<CommentDto>? Replies { get; set; }
 
         [Required]
         public string Content { get; set; }

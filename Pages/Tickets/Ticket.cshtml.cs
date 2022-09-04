@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Tracker.Data;
 using Tracker.Models;
 using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 
 namespace Tracker.Pages.Tickets
 {
@@ -16,14 +17,19 @@ namespace Tracker.Pages.Tickets
     {
         private readonly Tracker.Data.ApplicationDbContext _context;
         private readonly IMapper _mapper;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public TicketModel(Tracker.Data.ApplicationDbContext context, IMapper mapper)
+        public TicketModel(Tracker.Data.ApplicationDbContext context, IMapper mapper, UserManager<ApplicationUser> userManager)
         {
             _context = context;
             _mapper = mapper;
+            _userManager = userManager;
         }
 
         public TicketDto TicketDto { get; set; }
+        public ApplicationUser Submitter { get; set; }
+        public ApplicationUser Assignee { get; set; }
+        
         public int Id { get; set; }
 
         public async Task<IActionResult> OnGetAsync(int? id)
@@ -41,6 +47,9 @@ namespace Tracker.Pages.Tickets
                 .Include(t => t.Submitter)
                 .Include(t => t.Assignee)
                 .FirstOrDefaultAsync(t => t.Id == id));
+
+            Submitter = await _userManager.FindByIdAsync(TicketDto.SubmitterId);
+            Assignee = await _userManager.FindByIdAsync(TicketDto.AssigneeId);
 
             if (TicketDto == null)
             {

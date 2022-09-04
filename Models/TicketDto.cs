@@ -4,6 +4,7 @@ namespace Tracker.Models
 {
     public class TicketDto
     {
+        [Required]
         public int Id { get; set; }
 
         [Required]
@@ -21,24 +22,16 @@ namespace Tracker.Models
         public int Priority { get; set; }
 
         [Required]
-        public int TicketTypeId { get; set; }
         public string Type { get; set; }
 
         [Required]
-        public int TicketStatusId { get; set; }
         public string Status { get; set; }
 
         [Required]
         public string SubmitterId { get; set; }
-        [Display(Name = "Submitter")]
-        public string SubmitterUsername { get; set; }
 
         [Required]
         public string AssigneeId { get; set; }
-        [Display(Name = "Assignee")]
-        public string AssigneeUsername { get; set; }
-
-        public ICollection<CommentDto>? Comments { get; set; }
 
         [Required]
         [DataType(DataType.DateTime)]

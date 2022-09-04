@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace Tracker.Models
@@ -9,6 +10,7 @@ namespace Tracker.Models
         public int Id { get; set; }
         
         [Required]
+        [ForeignKey("Ticket")]
         public int TicketId { get; set; }
         [JsonIgnore]
         public Ticket Ticket { get; set; }

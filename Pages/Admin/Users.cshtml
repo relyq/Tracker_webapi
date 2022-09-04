@@ -1,0 +1,13 @@
+﻿@page "/Admin/Users"
+@model Tracker.Pages.Admin.UsersModel
+
+@{
+	ViewData["Title"] = "Users";
+}
+
+<div>
+	<component type="typeof(Admin._UsersModal)" render-mode="Server" />
+</div>
+
+
+<script src="_content/Blazored.Modal/blazored.modal.js"></script>

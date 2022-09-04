@@ -25,16 +25,18 @@ namespace Tracker.Controllers
             _mapper = mapper;
         }
 
+        /* no point in getting all comments
         // GET: api/Comments
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Comment>>> GetComment()
         {
             return await _context.Comment.ToListAsync();
         }
+        */
 
         // GET: api/Comments/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Comment>> GetComment(int id)
+        public async Task<ActionResult<CommentDto>> GetComment(int id)
         {
             var comment = await _context.Comment.FindAsync(id);
 
@@ -43,18 +45,22 @@ namespace Tracker.Controllers
                 return NotFound();
             }
 
-            return comment;
+            CommentDto commentDto = _mapper.Map<CommentDto>(comment);
+
+            return commentDto;
         }
 
         // PUT: api/Comments/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutComment(int id, Comment comment)
+        public async Task<IActionResult> PutComment(int id, CommentDto commentDto)
         {
-            if (id != comment.Id)
+            if (id != commentDto.Id)
             {
                 return BadRequest();
             }
+
+            Comment comment = _mapper.Map<Comment>(commentDto);
 
             _context.Entry(comment).State = EntityState.Modified;
 
@@ -80,19 +86,9 @@ namespace Tracker.Controllers
         // POST: api/Comments
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Comment>> PostComment(CommentDto commentDto)
+        public async Task<ActionResult<CommentDto>> PostComment(CommentDto commentDto)
         {
-            Comment comment = new()
-            {
-                AuthorId = commentDto.AuthorId,
-                TicketId = commentDto.TicketId,
-                ParentId = commentDto.ParentId,
-                Content = commentDto.Content,
-                Created = commentDto.Created,
-                Author = await _context.Users.FindAsync(commentDto.AuthorId),
-                Ticket = await _context.Ticket.FindAsync(commentDto.TicketId),
-                Parent = (commentDto.ParentId != null) ? await _context.Comment.FindAsync(commentDto.ParentId) : null,
-            };
+            Comment comment = _mapper.Map<Comment>(commentDto);
 
             _context.Comment.Add(comment);
             await _context.SaveChangesAsync();

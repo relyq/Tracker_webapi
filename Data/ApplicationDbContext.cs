@@ -14,7 +14,7 @@ namespace Tracker.Data
         public DbSet<Ticket> Ticket { get; set; }
         public DbSet<TicketStatus> TicketStatus { get; set; }
         public DbSet<TicketType> TicketType { get; set; }
-        public DbSet<Tracker.Models.Project> Project { get; set; }
+        public DbSet<Project> Project { get; set; }
         public DbSet<Comment> Comment { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -23,13 +23,32 @@ namespace Tracker.Data
             builder.Entity<Ticket>()
                 .HasOne(t => t.Assignee)
                 .WithMany()
-                .IsRequired()
+                .OnDelete(DeleteBehavior.NoAction)
+                .IsRequired();
+
+            builder.Entity<Ticket>()
+                .HasOne(t => t.Submitter)
+                .WithMany()
+                .OnDelete(DeleteBehavior.NoAction);
+            
+            builder.Entity<Ticket>()
+                .HasOne(t => t.Type)
+                .WithMany()
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<Ticket>()
+                .HasOne(t => t.Status)
+                .WithMany()
                 .OnDelete(DeleteBehavior.NoAction);
 
             builder.Entity<Comment>()
                 .HasOne(c => c.Ticket)
                 .WithMany(t => t.Comments)
-                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Comment>()
+                .HasOne(c => c.Author)
+                .WithMany()
                 .OnDelete(DeleteBehavior.NoAction);
         }
 

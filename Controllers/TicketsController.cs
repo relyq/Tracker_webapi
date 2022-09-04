@@ -25,54 +25,69 @@ namespace Tracker.Controllers
             _mapper = mapper;
         }
 
+        /* no point in getting all tickets
         // GET: api/Tickets
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Ticket>>> GetTicket()
+        public async Task<ActionResult<IEnumerable<TicketDto>>> GetTicket()
         {
-            return await _context.Ticket.ToListAsync();
+            var tickets = await _context.Ticket
+                .Include(t => t.Status)
+                .Include(t => t.Type)
+                .Include(t => t.Submitter)
+                .Include(t => t.Assignee)
+                .ToListAsync();
+
+            var ticketsDto = _mapper.Map<IEnumerable<Ticket>, IEnumerable<TicketDto>>(tickets);
+
+            return Ok(ticketsDto);
         }
+        */
 
         // GET: api/Tickets/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Ticket>> GetTicket(int id)
+        public async Task<ActionResult<TicketDto>> GetTicket(int id)
         {
-            var ticket = await _context.Ticket.FindAsync(id);
+            var ticket = await _context.Ticket
+                .Include(t => t.Status)
+                .Include(t => t.Type)
+                .Include(t => t.Submitter)
+                .Include(t => t.Assignee)
+                .FirstOrDefaultAsync(t => t.Id == id);
 
             if (ticket == null)
             {
                 return NotFound();
             }
 
-            return ticket;
+            var ticketDto = _mapper.Map<TicketDto>(ticket);
+
+            return ticketDto;
         }
 
         // GET api/Tickets/5/Comments
         [HttpGet("{id}/Comments")]
         public async Task<IEnumerable<CommentDto>> GetTicketComments(int id)
         {
-            IEnumerable<Comment> CommentList = await _context.Comment
+            IEnumerable<Comment> comments = await _context.Comment
                 .Where(c => c.TicketId == id)
                 .ToListAsync();
 
-            IEnumerable<CommentDto> CommentDtoList = _mapper.Map<IEnumerable<Comment>, IEnumerable<CommentDto>>(CommentList);
+            IEnumerable<CommentDto> commentsDto = _mapper.Map<IEnumerable<Comment>, IEnumerable<CommentDto>>(comments);
 
-            foreach (var com in CommentDtoList)
-            {
-                com.AuthorUsername = _context.Users.Find(com.AuthorId).UserName;
-            }
-
-            return CommentDtoList;
+            return commentsDto;
         }
 
         // PUT: api/Tickets/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutTicket(int id, Ticket ticket)
+        public async Task<IActionResult> PutTicket(int id, TicketDto ticketDto)
         {
-            if (id != ticket.Id)
+            if (id != ticketDto.Id)
             {
                 return BadRequest();
             }
+
+            Ticket ticket = _mapper.Map<Ticket>(ticketDto);
 
             _context.Entry(ticket).State = EntityState.Modified;
 
@@ -95,49 +110,19 @@ namespace Tracker.Controllers
             return NoContent();
         }
 
+
         // POST: api/Tickets
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Ticket>> PostTicket(Ticket ticket)
+        public async Task<ActionResult<TicketDto>> PostTicket(TicketDto ticketDto)
         {
+            Ticket ticket = _mapper.Map<Ticket>(ticketDto);
+
             _context.Ticket.Add(ticket);
             await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetTicket", new { id = ticket.Id }, ticket);
-        }
-
-        // POST: api/Tickets/5/Comments
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost("{id}/Comments")]
-        public async Task<IEnumerable<CommentDto>> PostTicketComment(int id, CommentDto commentDto)
-        {
-            Comment comment = new()
-            {
-                AuthorId = commentDto.AuthorId,
-                TicketId = commentDto.TicketId,
-                ParentId = commentDto.ParentId,
-                Content = commentDto.Content,
-                Created = commentDto.Created,
-                Author = await _context.Users.FindAsync(commentDto.AuthorId),
-                Ticket = await _context.Ticket.FindAsync(commentDto.TicketId),
-                Parent = (commentDto.ParentId != null) ? await _context.Comment.FindAsync(commentDto.ParentId) : null,
-            };
-
-            _context.Comment.Add(comment);
-            await _context.SaveChangesAsync();
-
-            IEnumerable<Comment> CommentList = await _context.Comment
-                .Where(c => c.TicketId == id)
-                .ToListAsync();
-
-            IEnumerable<CommentDto> CommentDtoList = _mapper.Map<IEnumerable<Comment>, IEnumerable<CommentDto>>(CommentList);
-
-            foreach(var com in CommentDtoList)
-			{
-                com.AuthorUsername = _context.Users.Find(com.AuthorId).UserName;
-			}
-
-            return CommentDtoList;
+            
+            // this might not work properly
+            return CreatedAtAction(nameof(GetTicket), new { id = ticketDto.Id }, ticketDto);
         }
 
         // DELETE: api/Tickets/5

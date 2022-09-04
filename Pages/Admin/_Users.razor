@@ -1,0 +1,65 @@
+﻿@using Microsoft.EntityFrameworkCore
+@using Tracker.Models
+@inject Tracker.Data.ApplicationDbContext context
+
+<h3>Users</h3>
+<button @onclick="@(() => Modal.Show<_UsersNew>("New user"))">New</button>
+<button>Edit</button>
+<button>Delete</button>
+<button>Password</button>
+
+@if (UsersList == null)
+{
+	<div style="text-align: center;">
+		<h3 style="font-size: 20px; font-weight: 600; color: #333;">Loading...</h3>
+	</div>
+}
+else
+{
+	<table class="table">
+		<thead>
+			<tr>
+				<th>
+					id
+				</th>
+				<th>
+					Username
+				</th>
+				<th>
+					Email
+				</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var user in UsersList)
+			{
+				<tr>
+					<td>
+						@user.Id
+					</td>
+					<td>
+						@user.UserName
+					</td>
+					<td>
+						@user.Email
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+
+@code {
+	[CascadingParameter] public IModalService Modal { get; set; }
+
+	public IEnumerable<ApplicationUser> UsersList { get; set; }
+
+	protected override async Task OnInitializedAsync()
+	{
+		base.OnInitializedAsync();
+
+		UsersList = await context.Users.ToListAsync();
+
+		return;
+	}
+}

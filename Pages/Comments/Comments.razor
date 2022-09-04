@@ -12,7 +12,7 @@
 <h3>Comments</h3>
 
 <form>
-	<input @bind="@CommentContent" class="form-control" />
+	<textarea style="resize:both" placeholder="Comment here" rows="4" cols="75" class="form-control"  @bind="@CommentContent"></textarea>
 	<div class="form-group">
 		<input type="submit" value="Add Comment" class="btn btn-primary" @onclick="AddComment" />
 	</div>
@@ -30,7 +30,7 @@ else
 		@foreach (var comment in CommentList)
 		{
 			<div>
-				<h5 style="display:inline;">@comment.AuthorUsername</h5> <p style="display:inline;"> - @comment.Created</p>
+				<h5 style="display:inline;">@Users.FirstOrDefault(u => u.Id == comment.AuthorId).Email</h5> <p style="display:inline;"> - @comment.Created</p>
 				<p>@comment.Content</p>
 			</div>
 		}
@@ -43,6 +43,7 @@ else
 	public int TicketId { get; set; }
 
 	public IList<CommentDto>? CommentList { get; set; }
+	public IEnumerable<ApplicationUser> Users { get; set; }
 
 	public string CommentContent { get; set; }
 
@@ -55,6 +56,7 @@ else
 		client.BaseAddress = new Uri("https://localhost:7004/");
 
 		CommentList = await client.GetFromJsonAsync<IList<CommentDto>>($"api/Tickets/{TicketId}/Comments");
+		Users = userManager.Users;
 
 		((List<CommentDto>)CommentList).Sort((x, y) => DateTime.Compare(y.Created, x.Created));
 	}
@@ -79,7 +81,6 @@ else
 		CommentDto Comment = new CommentDto();
 
 		Comment.AuthorId = userManager.GetUserId(user);
-		Comment.AuthorUsername = userManager.GetUserName(user);
 		Comment.TicketId = TicketId;
 		Comment.Content = CommentContent;
 		Comment.Created = DateTime.Now;
@@ -90,7 +91,7 @@ else
 		client.BaseAddress = new Uri("https://localhost:7004/");
 
 
-		var response = await client.PostAsJsonAsync($"api/Tickets/{TicketId}/Comments", Comment);
+		var response = await client.PostAsJsonAsync("api/Comments", Comment);
 
 		if (!response.IsSuccessStatusCode)
 		{

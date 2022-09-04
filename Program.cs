@@ -3,19 +3,35 @@ using Microsoft.EntityFrameworkCore;
 using AutoMapper;
 using Tracker.Data;
 using Tracker.Models;
+using Blazored.Modal;
+using Microsoft.AspNetCore.Mvc.Formatters;
+
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
+
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
 builder.Services.AddHttpClient();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins,
+                      policy =>
+                      {
+                          policy.AllowAnyHeader()
+                          .AllowAnyOrigin()
+                          .AllowAnyMethod();
+                      });
+});
 
 builder.Services.AddServerSideBlazor();
 builder.Services.AddSignalR(e =>
@@ -25,11 +41,13 @@ builder.Services.AddSignalR(e =>
 
 builder.Services.AddRazorPages(options =>
 {
-    options.Conventions.AuthorizeFolder("/Projects");
-    options.Conventions.AuthorizeFolder("/Tickets");
+    options.Conventions.AuthorizeFolder("/");
 });
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+    options.InputFormatters.Insert(0, Tracker.MyJPIF.GetJsonPatchInputFormatter());
+});
 
 var config = new MapperConfiguration(cfg =>
 {
@@ -41,6 +59,8 @@ config.AssertConfigurationIsValid();
 var mapper = config.CreateMapper();
 
 builder.Services.AddAutoMapper(typeof(Program));
+
+builder.Services.AddBlazoredModal();
 
 var app = builder.Build();
 
@@ -60,6 +80,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseCors(MyAllowSpecificOrigins);
 
 app.UseAuthentication();
 app.UseAuthorization();
