@@ -9,10 +9,12 @@ using Microsoft.EntityFrameworkCore;
 using Tracker.Data;
 using Tracker.Models;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Tracker.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize]
     [ApiController]
     public class TicketsController : ControllerBase
     {
