@@ -20,6 +20,7 @@ namespace Tracker.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
             builder.Entity<Ticket>()
                 .HasOne(t => t.Assignee)
                 .WithMany()
@@ -50,7 +51,8 @@ namespace Tracker.Data
                 .HasOne(c => c.Author)
                 .WithMany()
                 .OnDelete(DeleteBehavior.NoAction);
-        }
 
+            builder.ApplyConfiguration(new RoleConfiguration());
+        }
     }
 }

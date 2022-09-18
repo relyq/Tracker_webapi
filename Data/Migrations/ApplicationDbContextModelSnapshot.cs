@@ -47,6 +47,29 @@ namespace Tracker.Data.Migrations
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("AspNetRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "132d3801-ad39-4778-92fc-14dee8b8d2a8",
+                            ConcurrencyStamp = "cda63a26-c133-4181-9e00-4b4b7b6d9049",
+                            Name = "Administrator",
+                            NormalizedName = "ADMINISTRATOR"
+                        },
+                        new
+                        {
+                            Id = "e5b62a8c-80dd-40e2-9fd7-7d293cb23ff0",
+                            ConcurrencyStamp = "503ea131-c626-49f1-a9fc-0c074742d51b",
+                            Name = "Developer",
+                            NormalizedName = "DEVELOPER"
+                        },
+                        new
+                        {
+                            Id = "3d865d1e-3dea-4a58-ae93-0b2eaa78ac79",
+                            ConcurrencyStamp = "2b4a5ef8-ed84-4ac6-b638-35235540d477",
+                            Name = "User",
+                            NormalizedName = "USER"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -276,7 +299,7 @@ namespace Tracker.Data.Migrations
 
                     b.HasIndex("TicketId");
 
-                    b.ToTable("Comment");
+                    b.ToTable("Comment", (string)null);
                 });
 
             modelBuilder.Entity("Tracker.Models.Project", b =>
@@ -301,7 +324,7 @@ namespace Tracker.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Project");
+                    b.ToTable("Project", (string)null);
                 });
 
             modelBuilder.Entity("Tracker.Models.Ticket", b =>
@@ -359,7 +382,7 @@ namespace Tracker.Data.Migrations
 
                     b.HasIndex("TicketTypeId");
 
-                    b.ToTable("Ticket");
+                    b.ToTable("Ticket", (string)null);
                 });
 
             modelBuilder.Entity("Tracker.Models.TicketStatus", b =>
@@ -377,7 +400,7 @@ namespace Tracker.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TicketStatus");
+                    b.ToTable("TicketStatus", (string)null);
                 });
 
             modelBuilder.Entity("Tracker.Models.TicketType", b =>
@@ -395,7 +418,7 @@ namespace Tracker.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TicketType");
+                    b.ToTable("TicketType", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
