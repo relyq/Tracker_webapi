@@ -30,6 +30,22 @@ namespace Tracker.Pages
                 .ForMember(c => c.Author, opt => opt.Ignore())
                 .ForMember(c => c.Parent, opt => opt.Ignore())
                 .ForMember(c => c.Replies, opt => opt.Ignore());
+            CreateMap<ApplicationUser, UserDto>();
+            CreateMap<UserDto, ApplicationUser>()
+                .ForMember(u => u.Comments, opt => opt.Ignore())
+                .ForMember(u => u.Updated, opt => opt.Ignore())
+                .ForMember(u => u.NormalizedUserName, opt => opt.Ignore())
+                .ForMember(u => u.NormalizedEmail, opt => opt.Ignore())
+                .ForMember(u => u.EmailConfirmed, opt => opt.Ignore())
+                .ForMember(u => u.PasswordHash, opt => opt.Ignore())
+                .ForMember(u => u.SecurityStamp, opt => opt.Ignore())
+                .ForMember(u => u.ConcurrencyStamp, opt => opt.Ignore())
+                .ForMember(u => u.PhoneNumber, opt => opt.Ignore())
+                .ForMember(u => u.PhoneNumberConfirmed, opt => opt.Ignore())
+                .ForMember(u => u.TwoFactorEnabled, opt => opt.Ignore())
+                .ForMember(u => u.LockoutEnd, opt => opt.Ignore())
+                .ForMember(u => u.LockoutEnabled, opt => opt.Ignore())
+                .ForMember(u => u.AccessFailedCount, opt => opt.Ignore());
         }
         public class TicketTypeStatusAction : IMappingAction<TicketDto, Ticket>
         {
