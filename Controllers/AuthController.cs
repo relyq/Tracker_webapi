@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq.Expressions;
 using System.Security.Claims;
@@ -41,13 +42,11 @@ namespace Tracker.Controllers
 
             if (res.Succeeded)
             {
-                var exp = 15;
+                var exp = 30;
                 var token = GenerateJWT(user, exp);
                 var expTime = (DateTime.UtcNow + new TimeSpan(0, exp, 0)).ToString("yyyy/MM/dd HH:mm:ss");
-                return Ok($"{{\"jwt\":\"{token}\",\"exp\":\"{expTime}\"}}");
+                return Ok($"{{\"jwt\":\"{token}\"}}");
             }
-
-
 
             return NotFound();
         }
@@ -64,14 +63,7 @@ namespace Tracker.Controllers
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
-            var claims = new[]
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.UserName),
-                new Claim(ClaimTypes.Email, user.Email)
-                //new Claim(ClaimTypes.GivenName, user.FirstName),
-                //new Claim(ClaimTypes.Surname, user.LastName)
-                //new Claim(ClaimTypes.Role, user.Role)
-            };
+            var claims = GetClaims(user).Result;
 
             var token = new JwtSecurityToken(
                 _config["Jwt:Issuer"],
@@ -82,6 +74,21 @@ namespace Tracker.Controllers
                 );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+        
+        private async Task<List<Claim>> GetClaims(ApplicationUser user)
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+
+            var claims = new List<Claim>()
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.UserName),
+                new Claim(ClaimTypes.Email, user.Email)
+            };
+
+            (roles as List<string>).ForEach(role => claims.Add(new Claim(ClaimTypes.Role, role)));
+
+            return claims;
         }
     }
 
