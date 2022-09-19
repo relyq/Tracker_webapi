@@ -82,6 +82,7 @@ namespace Tracker.Controllers
 
         // PUT: api/Projects/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [Authorize(Roles = "Administrator")]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutProject(int id, ProjectDto projectDto)
         {
@@ -115,6 +116,7 @@ namespace Tracker.Controllers
 
         // POST: api/Projects
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [Authorize(Roles = "Administrator")]
         [HttpPost]
         public async Task<ActionResult<ProjectDto>> PostProject(ProjectDto projectDto)
         {
@@ -126,7 +128,7 @@ namespace Tracker.Controllers
             // this might not work properly
             return CreatedAtAction("GetProject", new { id = projectDto.Id }, projectDto);
         }
-        
+
         /* not working
         // PATCH: api/Projects/5
         [HttpPatch("{id}")]
@@ -166,6 +168,7 @@ namespace Tracker.Controllers
         */
 
         // DELETE: api/Projects/5
+        [Authorize(Roles = "Administrator")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProject(int id)
         {

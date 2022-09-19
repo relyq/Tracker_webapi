@@ -81,6 +81,7 @@ namespace Tracker.Controllers
 
         // PUT: api/Tickets/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [Authorize(Roles = "Administrator,Developer")]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutTicket(int id, TicketDto ticketDto)
         {
@@ -115,6 +116,7 @@ namespace Tracker.Controllers
 
         // POST: api/Tickets
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [Authorize(Roles = "Administrator,Developer")]
         [HttpPost]
         public async Task<ActionResult<TicketDto>> PostTicket(TicketDto ticketDto)
         {
@@ -128,6 +130,7 @@ namespace Tracker.Controllers
         }
 
         // DELETE: api/Tickets/5
+        [Authorize(Roles = "Administrator,Developer")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTicket(int id)
         {
