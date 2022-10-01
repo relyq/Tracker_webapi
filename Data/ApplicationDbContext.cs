@@ -21,6 +21,11 @@ namespace Tracker.Data
         {
             base.OnModelCreating(builder);
 
+            builder.Entity<Project>()
+                .HasOne(p => p.Author)
+                .WithMany()
+                .OnDelete(DeleteBehavior.NoAction);
+
             builder.Entity<Ticket>()
                 .HasOne(t => t.Assignee)
                 .WithMany()

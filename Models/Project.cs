@@ -5,6 +5,10 @@ namespace Tracker.Models
     public class Project
     {
         public int Id { get; set; }
+
+        public string? AuthorId { get; set; }
+        public ApplicationUser? Author { get; set; }
+
         [Required]
         [StringLength(100)]
         public string Name { get; set; }

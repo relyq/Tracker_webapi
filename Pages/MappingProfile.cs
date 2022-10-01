@@ -23,6 +23,7 @@ namespace Tracker.Pages
                 .AfterMap<TicketTypeStatusAction>();
             CreateMap<Project, ProjectDto>();
             CreateMap<ProjectDto, Project>()
+                .ForMember(p => p.Author, opt => opt.Ignore())
                 .ForMember(p => p.Tickets, opt => opt.Ignore());
             CreateMap<Comment, CommentDto>();
             CreateMap<CommentDto, Comment>()

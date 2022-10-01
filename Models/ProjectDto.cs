@@ -7,6 +7,8 @@ namespace Tracker.Models
         [Required]
         public int Id { get; set; }
 
+        public string? AuthorId { get; set; }
+
         [Required]
         [StringLength(100)]
         public string Name { get; set; }

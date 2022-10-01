@@ -17,7 +17,7 @@ namespace Tracker.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "6.0.8")
+                .HasAnnotation("ProductVersion", "6.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
@@ -299,7 +299,7 @@ namespace Tracker.Data.Migrations
 
                     b.HasIndex("TicketId");
 
-                    b.ToTable("Comment", (string)null);
+                    b.ToTable("Comment");
                 });
 
             modelBuilder.Entity("Tracker.Models.Project", b =>
@@ -309,6 +309,9 @@ namespace Tracker.Data.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<string>("AuthorId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("Created")
                         .HasColumnType("datetime2");
@@ -324,7 +327,9 @@ namespace Tracker.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Project", (string)null);
+                    b.HasIndex("AuthorId");
+
+                    b.ToTable("Project");
                 });
 
             modelBuilder.Entity("Tracker.Models.Ticket", b =>
@@ -382,7 +387,7 @@ namespace Tracker.Data.Migrations
 
                     b.HasIndex("TicketTypeId");
 
-                    b.ToTable("Ticket", (string)null);
+                    b.ToTable("Ticket");
                 });
 
             modelBuilder.Entity("Tracker.Models.TicketStatus", b =>
@@ -400,7 +405,7 @@ namespace Tracker.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TicketStatus", (string)null);
+                    b.ToTable("TicketStatus");
                 });
 
             modelBuilder.Entity("Tracker.Models.TicketType", b =>
@@ -418,7 +423,7 @@ namespace Tracker.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TicketType", (string)null);
+                    b.ToTable("TicketType");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -499,6 +504,16 @@ namespace Tracker.Data.Migrations
                     b.Navigation("Parent");
 
                     b.Navigation("Ticket");
+                });
+
+            modelBuilder.Entity("Tracker.Models.Project", b =>
+                {
+                    b.HasOne("Tracker.Models.ApplicationUser", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Author");
                 });
 
             modelBuilder.Entity("Tracker.Models.Ticket", b =>
