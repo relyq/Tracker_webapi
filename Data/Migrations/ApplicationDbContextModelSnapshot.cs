@@ -39,12 +39,17 @@ namespace Tracker.Data.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
+                    b.Property<Guid?>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
                     b.HasIndex("NormalizedName")
                         .IsUnique()
                         .HasDatabaseName("RoleNameIndex")
                         .HasFilter("[NormalizedName] IS NOT NULL");
+
+                    b.HasIndex("OrganizationId");
 
                     b.ToTable("AspNetRoles", (string)null);
 
@@ -195,7 +200,9 @@ namespace Tracker.Data.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("Created")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
@@ -225,6 +232,9 @@ namespace Tracker.Data.Migrations
                     b.Property<string>("NormalizedUserName")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");
@@ -257,6 +267,8 @@ namespace Tracker.Data.Migrations
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
+
+                    b.HasIndex("OrganizationId");
 
                     b.ToTable("AspNetUsers", (string)null);
                 });
@@ -302,6 +314,23 @@ namespace Tracker.Data.Migrations
                     b.ToTable("Comment");
                 });
 
+            modelBuilder.Entity("Tracker.Models.Organization", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWID()");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Organization");
+                });
+
             modelBuilder.Entity("Tracker.Models.Project", b =>
                 {
                     b.Property<int>("Id")
@@ -325,9 +354,14 @@ namespace Tracker.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
                     b.HasIndex("AuthorId");
+
+                    b.HasIndex("OrganizationId");
 
                     b.ToTable("Project");
                 });
@@ -398,12 +432,17 @@ namespace Tracker.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
 
                     b.ToTable("TicketStatus");
                 });
@@ -416,6 +455,9 @@ namespace Tracker.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -423,7 +465,16 @@ namespace Tracker.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("OrganizationId");
+
                     b.ToTable("TicketType");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
+                {
+                    b.HasOne("Tracker.Models.Organization", null)
+                        .WithMany("Roles")
+                        .HasForeignKey("OrganizationId");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -477,6 +528,17 @@ namespace Tracker.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Tracker.Models.ApplicationUser", b =>
+                {
+                    b.HasOne("Tracker.Models.Organization", "Organization")
+                        .WithMany("Users")
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Organization");
+                });
+
             modelBuilder.Entity("Tracker.Models.Comment", b =>
                 {
                     b.HasOne("Tracker.Models.ApplicationUser", null)
@@ -513,7 +575,15 @@ namespace Tracker.Data.Migrations
                         .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.NoAction);
 
+                    b.HasOne("Tracker.Models.Organization", "Organization")
+                        .WithMany("Projects")
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Author");
+
+                    b.Navigation("Organization");
                 });
 
             modelBuilder.Entity("Tracker.Models.Ticket", b =>
@@ -559,6 +629,28 @@ namespace Tracker.Data.Migrations
                     b.Navigation("Type");
                 });
 
+            modelBuilder.Entity("Tracker.Models.TicketStatus", b =>
+                {
+                    b.HasOne("Tracker.Models.Organization", "Organization")
+                        .WithMany("TicketStatuses")
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Organization");
+                });
+
+            modelBuilder.Entity("Tracker.Models.TicketType", b =>
+                {
+                    b.HasOne("Tracker.Models.Organization", "Organization")
+                        .WithMany("TicketTypes")
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Organization");
+                });
+
             modelBuilder.Entity("Tracker.Models.ApplicationUser", b =>
                 {
                     b.Navigation("Comments");
@@ -567,6 +659,19 @@ namespace Tracker.Data.Migrations
             modelBuilder.Entity("Tracker.Models.Comment", b =>
                 {
                     b.Navigation("Replies");
+                });
+
+            modelBuilder.Entity("Tracker.Models.Organization", b =>
+                {
+                    b.Navigation("Projects");
+
+                    b.Navigation("Roles");
+
+                    b.Navigation("TicketStatuses");
+
+                    b.Navigation("TicketTypes");
+
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("Tracker.Models.Project", b =>
