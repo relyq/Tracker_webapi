@@ -13,6 +13,9 @@ namespace Tracker.Models
         [Required]
         public string Email { get; set; }
 
+        [Required]
+        public Guid OrganizationId { get; set; }
+
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
 

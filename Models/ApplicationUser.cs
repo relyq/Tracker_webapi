@@ -5,6 +5,10 @@ namespace Tracker.Models
 {
     public class ApplicationUser : IdentityUser
     {
+        [Required]
+        public Guid OrganizationId { get; set; }
+        public Organization Organization { get; set; }
+
         [StringLength(50)]
         public string? FirstName { get; set; }
 

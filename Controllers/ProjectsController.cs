@@ -10,6 +10,9 @@ using Tracker.Models;
 using AutoMapper;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using System.Security.Claims;
 
 namespace Tracker.Controllers
 {
@@ -20,6 +23,7 @@ namespace Tracker.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
+        private readonly AuthHelpers _authHelpers = new AuthHelpers();
 
         public ProjectsController(ApplicationDbContext context, IMapper mapper)
         {
@@ -27,26 +31,39 @@ namespace Tracker.Controllers
             _mapper = mapper;
         }
 
+        // this might not be rest as it only gets projects from the user's organization
         // GET: api/Projects
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ProjectDto>>> GetProject()
         {
-          if (_context.Project == null)
-          {
-              return NotFound();
-          }
+            if (_context.Project == null)
+            {
+                return NotFound();
+            }
 
-            var projects = await _context.Project.ToListAsync();
+            var organization = _authHelpers.GetUserOrganization(HttpContext.User);
+
+            var projects = await _context.Project
+                .Where(p => p.OrganizationId == organization)
+                .ToListAsync();
 
             var projectsDto = _mapper.Map<IEnumerable<Project>, IEnumerable<ProjectDto>>(projects);
 
-          return Ok(projectsDto);
+            return Ok(projectsDto);
         }
 
+        // this should probably be in the tickets controller
         // GET: api/Projects/5/Tickets
         [HttpGet("{id}/Tickets")]
         public async Task<ActionResult<IEnumerable<TicketDto>>> GetTicketByProject(int id)
         {
+            var project = await _context.Project.FindAsync(id);
+
+            if (project.OrganizationId != _authHelpers.GetUserOrganization(HttpContext.User))
+            {
+                return Forbid();
+            }
+
             var tickets = await _context.Ticket
                 .Where(t => t.ProjectId == id)
                 .Include(t => t.Status)
@@ -64,15 +81,21 @@ namespace Tracker.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<ProjectDto>> GetProject(int id)
         {
-          if (_context.Project == null)
-          {
-              return NotFound();
-          }
+            if (_context.Project == null)
+            {
+                return NotFound();
+            }
+
             var project = await _context.Project.FindAsync(id);
 
             if (project == null)
             {
                 return NotFound();
+            }
+
+            if (project.OrganizationId != _authHelpers.GetUserOrganization(HttpContext.User))
+            {
+                return Forbid();
             }
 
             ProjectDto projectDto = _mapper.Map<ProjectDto>(project);
@@ -91,7 +114,18 @@ namespace Tracker.Controllers
                 return BadRequest();
             }
 
-            Project project = _mapper.Map<Project>(projectDto);
+            Project project = await _context.Project
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (project != null && project.OrganizationId != _authHelpers.GetUserOrganization(HttpContext.User))
+            {
+                return Forbid();
+            }
+
+            project = _mapper.Map<Project>(projectDto);
+
+            project.OrganizationId = _authHelpers.GetUserOrganization(HttpContext.User);
 
             _context.Entry(project).State = EntityState.Modified;
 
@@ -122,10 +156,11 @@ namespace Tracker.Controllers
         {
             Project project = _mapper.Map<Project>(projectDto);
 
+            project.OrganizationId = _authHelpers.GetUserOrganization(HttpContext.User);
+
             _context.Project.Add(project);
             await _context.SaveChangesAsync();
 
-            // this might not work properly
             return CreatedAtAction("GetProject", new { id = projectDto.Id }, projectDto);
         }
 
@@ -176,10 +211,17 @@ namespace Tracker.Controllers
             {
                 return NotFound();
             }
+
             var project = await _context.Project.FindAsync(id);
+
             if (project == null)
             {
                 return NotFound();
+            }
+
+            if (project.OrganizationId != _authHelpers.GetUserOrganization(HttpContext.User))
+            {
+                return Forbid();
             }
 
             _context.Project.Remove(project);

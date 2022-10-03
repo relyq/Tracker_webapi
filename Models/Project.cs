@@ -6,6 +6,10 @@ namespace Tracker.Models
     {
         public int Id { get; set; }
 
+        [Required]
+        public Guid OrganizationId { get; set; }
+        public Organization Organization { get; set; }
+
         public string? AuthorId { get; set; }
         public ApplicationUser? Author { get; set; }
 

@@ -20,6 +20,7 @@ namespace Tracker.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
+        private readonly AuthHelpers _authHelpers = new AuthHelpers();
 
         public CommentsController(ApplicationDbContext context, IMapper mapper)
         {
@@ -40,11 +41,19 @@ namespace Tracker.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<CommentDto>> GetComment(int id)
         {
-            var comment = await _context.Comment.FindAsync(id);
+            var comment = await _context.Comment
+                .Include(c => c.Ticket)
+                .ThenInclude(t => t.Project)
+                .FirstOrDefaultAsync(c => c.Id == id);
 
             if (comment == null)
             {
                 return NotFound();
+            }
+
+            if ( comment.Ticket.Project.OrganizationId != _authHelpers.GetUserOrganization(HttpContext.User))
+            {
+                return Forbid();
             }
 
             CommentDto commentDto = _mapper.Map<CommentDto>(comment);
@@ -60,6 +69,15 @@ namespace Tracker.Controllers
             if (id != commentDto.Id)
             {
                 return BadRequest();
+            }
+
+            var t = await _context.Ticket
+                .Include(t => t.Project)
+                .FirstOrDefaultAsync(t => t.Id == commentDto.TicketId);
+
+            if (t != null && t.Project.OrganizationId != _authHelpers.GetUserOrganization(HttpContext.User))
+            {
+                return Forbid();
             }
 
             Comment comment = _mapper.Map<Comment>(commentDto);
@@ -90,6 +108,15 @@ namespace Tracker.Controllers
         [HttpPost]
         public async Task<ActionResult<CommentDto>> PostComment(CommentDto commentDto)
         {
+            var t = await _context.Ticket
+                .Include(t => t.Project)
+                .FirstOrDefaultAsync(t => t.Id == commentDto.TicketId);
+
+            if (t != null && t.Project.OrganizationId != _authHelpers.GetUserOrganization(HttpContext.User))
+            {
+                return Forbid();
+            }
+
             Comment comment = _mapper.Map<Comment>(commentDto);
 
             _context.Comment.Add(comment);
@@ -102,10 +129,19 @@ namespace Tracker.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteComment(int id)
         {
-            var comment = await _context.Comment.FindAsync(id);
+            var comment = await _context.Comment
+                .Include(c => c.Ticket)
+                .ThenInclude(t => t.Project)
+                .FirstOrDefaultAsync(c => c.Id == id);
+
             if (comment == null)
             {
                 return NotFound();
+            }
+
+            if (comment.Ticket.Project.OrganizationId != _authHelpers.GetUserOrganization(HttpContext.User))
+            {
+                return Forbid();
             }
 
             _context.Comment.Remove(comment);

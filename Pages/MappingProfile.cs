@@ -24,6 +24,8 @@ namespace Tracker.Pages
             CreateMap<Project, ProjectDto>();
             CreateMap<ProjectDto, Project>()
                 .ForMember(p => p.Author, opt => opt.Ignore())
+                .ForMember(p => p.Organization, opt => opt.Ignore())
+                .ForMember(p => p.OrganizationId, opt => opt.Ignore())
                 .ForMember(p => p.Tickets, opt => opt.Ignore());
             CreateMap<Comment, CommentDto>();
             CreateMap<CommentDto, Comment>()
@@ -33,6 +35,7 @@ namespace Tracker.Pages
                 .ForMember(c => c.Replies, opt => opt.Ignore());
             CreateMap<ApplicationUser, UserDto>();
             CreateMap<UserDto, ApplicationUser>()
+                .ForMember(u => u.Organization, opt => opt.Ignore())
                 .ForMember(u => u.Comments, opt => opt.Ignore())
                 .ForMember(u => u.Updated, opt => opt.Ignore())
                 .ForMember(u => u.NormalizedUserName, opt => opt.Ignore())
@@ -47,6 +50,13 @@ namespace Tracker.Pages
                 .ForMember(u => u.LockoutEnd, opt => opt.Ignore())
                 .ForMember(u => u.LockoutEnabled, opt => opt.Ignore())
                 .ForMember(u => u.AccessFailedCount, opt => opt.Ignore());
+            CreateMap<Organization, OrganizationDto>();
+            CreateMap<OrganizationDto, Organization>()
+                .ForMember(o => o.Users, opt => opt.Ignore())
+                .ForMember(o => o.Projects, opt => opt.Ignore())
+                .ForMember(o => o.Roles, opt => opt.Ignore())
+                .ForMember(o => o.TicketTypes, opt => opt.Ignore())
+                .ForMember(o => o.TicketStatuses, opt => opt.Ignore());
         }
         public class TicketTypeStatusAction : IMappingAction<TicketDto, Ticket>
         {

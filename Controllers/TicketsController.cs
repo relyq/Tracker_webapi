@@ -20,6 +20,7 @@ namespace Tracker.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
+        private readonly AuthHelpers _authHelpers = new AuthHelpers();
 
         public TicketsController(ApplicationDbContext context, IMapper mapper)
         {
@@ -54,11 +55,17 @@ namespace Tracker.Controllers
                 .Include(t => t.Type)
                 .Include(t => t.Submitter)
                 .Include(t => t.Assignee)
+                .Include(t => t.Project)
                 .FirstOrDefaultAsync(t => t.Id == id);
 
             if (ticket == null)
             {
                 return NotFound();
+            }
+
+            if (ticket.Project.OrganizationId != _authHelpers.GetUserOrganization(HttpContext.User))
+            {
+                return Forbid();
             }
 
             var ticketDto = _mapper.Map<TicketDto>(ticket);
@@ -68,15 +75,24 @@ namespace Tracker.Controllers
 
         // GET api/Tickets/5/Comments
         [HttpGet("{id}/Comments")]
-        public async Task<IEnumerable<CommentDto>> GetTicketComments(int id)
+        public async Task<ActionResult<IEnumerable<CommentDto>>> GetTicketComments(int id)
         {
+            var ticket = await _context.Ticket
+                .Include(t => t.Project)
+                .FirstOrDefaultAsync(t => t.Id == id);
+
+            if (ticket.Project.OrganizationId != _authHelpers.GetUserOrganization(HttpContext.User))
+            {
+                return Forbid();
+            }
+
             IEnumerable<Comment> comments = await _context.Comment
                 .Where(c => c.TicketId == id)
                 .ToListAsync();
 
             IEnumerable<CommentDto> commentsDto = _mapper.Map<IEnumerable<Comment>, IEnumerable<CommentDto>>(comments);
 
-            return commentsDto;
+            return Ok(commentsDto);
         }
 
         // PUT: api/Tickets/5
@@ -88,6 +104,13 @@ namespace Tracker.Controllers
             if (id != ticketDto.Id)
             {
                 return BadRequest();
+            }
+
+            var p = await _context.Project.FindAsync(ticketDto.ProjectId);
+
+            if (p != null && p.OrganizationId != _authHelpers.GetUserOrganization(HttpContext.User))
+            {
+                return Forbid();
             }
 
             Ticket ticket = _mapper.Map<Ticket>(ticketDto);
@@ -120,6 +143,13 @@ namespace Tracker.Controllers
         [HttpPost]
         public async Task<ActionResult<TicketDto>> PostTicket(TicketDto ticketDto)
         {
+            var p = await _context.Project.FindAsync(ticketDto.ProjectId);
+
+            if (p != null && p.OrganizationId != _authHelpers.GetUserOrganization(HttpContext.User))
+            {
+                return Forbid();
+            }
+
             Ticket ticket = _mapper.Map<Ticket>(ticketDto);
 
             _context.Ticket.Add(ticket);
@@ -134,10 +164,18 @@ namespace Tracker.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTicket(int id)
         {
-            var ticket = await _context.Ticket.FindAsync(id);
+            var ticket = await _context.Ticket
+                .Include(t => t.Project)
+                .FirstOrDefaultAsync(t => t.Id == id);
+            
             if (ticket == null)
             {
                 return NotFound();
+            }
+
+            if (ticket.Project.OrganizationId != _authHelpers.GetUserOrganization(HttpContext.User))
+            {
+                return Forbid();
             }
 
             _context.Ticket.Remove(ticket);

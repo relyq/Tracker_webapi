@@ -30,11 +30,6 @@ namespace Tracker.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(userLogin userLogin)
         {
-            Console.WriteLine("username");
-            Console.WriteLine(userLogin.Email);
-            Console.WriteLine("password");
-            Console.WriteLine(userLogin.Password);
-
             ApplicationUser user = await _userManager.FindByEmailAsync(userLogin.Email);
 
             // this is wrong lmao
@@ -83,10 +78,14 @@ namespace Tracker.Controllers
             var claims = new List<Claim>()
             {
                 new Claim(ClaimTypes.NameIdentifier, user.UserName),
-                new Claim(ClaimTypes.Email, user.Email)
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim("UserID", user.Id),
+                new Claim("OrganizationID", user.OrganizationId.ToString())
             };
 
             (roles as List<string>).ForEach(role => claims.Add(new Claim(ClaimTypes.Role, role)));
+
+
 
             return claims;
         }

@@ -16,10 +16,19 @@ namespace Tracker.Data
         public DbSet<TicketType> TicketType { get; set; }
         public DbSet<Project> Project { get; set; }
         public DbSet<Comment> Comment { get; set; }
+        public DbSet<Organization> Organization { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            builder.Entity<ApplicationUser>()
+                .Property(u => u.Created)
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            builder.Entity<Organization>()
+                .Property(o => o.Id)
+                .HasDefaultValueSql("NEWID()");
 
             builder.Entity<Project>()
                 .HasOne(p => p.Author)
