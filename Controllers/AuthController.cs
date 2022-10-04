@@ -39,18 +39,10 @@ namespace Tracker.Controllers
             {
                 var exp = 30;
                 var token = GenerateJWT(user, exp);
-                var expTime = (DateTime.UtcNow + new TimeSpan(0, exp, 0)).ToString("yyyy/MM/dd HH:mm:ss");
                 return Ok($"{{\"jwt\":\"{token}\"}}");
             }
 
             return NotFound();
-        }
-
-        [Authorize]
-        [HttpGet]
-        public IActionResult Test()
-        {
-            return Ok();
         }
 
         private string GenerateJWT(ApplicationUser user, int exp)
