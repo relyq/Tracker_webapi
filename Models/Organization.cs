@@ -11,6 +11,8 @@ namespace Tracker.Models
         [StringLength(100)]
         public string Name { get; set; }
 
+        public DateTime Created { get; set; }
+
         public IList<ApplicationUser>? Users { get; set; }
 
         public IList<Project>? Projects { get; set; }

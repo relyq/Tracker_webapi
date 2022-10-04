@@ -19,7 +19,6 @@ namespace Tracker.Models
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
 
-        [Required]
-        public DateTime Created { get; set; }
+        public DateTime? Created { get; set; }
     }
 }

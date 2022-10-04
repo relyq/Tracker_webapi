@@ -16,8 +16,7 @@ namespace Tracker.Models
         [StringLength(500)]
         public string? Description { get; set; }
         
-        [Required]
         [DataType(DataType.DateTime)]
-        public DateTime Created { get; set; }
+        public DateTime? Created { get; set; }
     }
 }

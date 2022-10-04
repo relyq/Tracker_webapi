@@ -9,5 +9,7 @@ namespace Tracker.Models
         [Required]
         [StringLength(100)]
         public string Name { get; set; }
+
+        public DateTime? Created { get; set; }
     }
 }

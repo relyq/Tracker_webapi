@@ -33,9 +33,8 @@ namespace Tracker.Models
         [Required]
         public string AssigneeId { get; set; }
 
-        [Required]
         [DataType(DataType.DateTime)]
-        public DateTime Created { get; set; }
+        public DateTime? Created { get; set; }
 
         [DataType(DataType.DateTime)]
         public DateTime? Closed { get; set; }

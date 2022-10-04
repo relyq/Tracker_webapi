@@ -25,6 +25,22 @@ namespace Tracker.Data
             builder.Entity<ApplicationUser>()
                 .Property(u => u.Created)
                 .HasDefaultValueSql("GETUTCDATE()");
+            
+            builder.Entity<Organization>()
+                .Property(o => o.Created)
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            builder.Entity<Project>()
+                .Property(p => p.Created)
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            builder.Entity<Ticket>()
+                .Property(t => t.Created)
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            builder.Entity<Comment>()
+                .Property(c => c.Created)
+                .HasDefaultValueSql("GETUTCDATE()");
 
             builder.Entity<Organization>()
                 .Property(o => o.Id)
