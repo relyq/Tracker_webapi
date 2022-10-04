@@ -79,6 +79,12 @@ namespace Tracker.Controllers
                 return Forbid();
             }
 
+            // these two should not be deleted
+            if (id == new Guid(_configuration["DefaultOrganization"]) || id == new Guid(_configuration["TrackerOrganization"]))
+            {
+                return StatusCode(418);
+            }
+
             var organization = _mapper.Map<Organization>(organizationDto);
 
             if (id != organization.Id)
@@ -116,6 +122,8 @@ namespace Tracker.Controllers
             {
                 return Forbid();
             }
+
+            organizationDto.Created = null;
 
             var organization = _mapper.Map<Organization>(organizationDto);
 
