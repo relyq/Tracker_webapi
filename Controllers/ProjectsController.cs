@@ -153,13 +153,22 @@ namespace Tracker.Controllers
         [Authorize(Roles = "Administrator")]
         [HttpPost]
         public async Task<ActionResult<ProjectDto>> PostProject(ProjectDto projectDto)
+
         {
+            projectDto.Created = null;
+
             Project project = _mapper.Map<Project>(projectDto);
+
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+
+            project.AuthorId = identity?.FindFirst("UserID")?.Value;
 
             project.OrganizationId = _authHelpers.GetUserOrganization(HttpContext.User);
 
             _context.Project.Add(project);
             await _context.SaveChangesAsync();
+
+            projectDto = _mapper.Map<ProjectDto>(project);
 
             return CreatedAtAction("GetProject", new { id = projectDto.Id }, projectDto);
         }

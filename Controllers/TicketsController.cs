@@ -10,6 +10,7 @@ using Tracker.Data;
 using Tracker.Models;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace Tracker.Controllers
 {
@@ -150,10 +151,18 @@ namespace Tracker.Controllers
                 return Forbid();
             }
 
+            ticketDto.Created = null;
+
             Ticket ticket = _mapper.Map<Ticket>(ticketDto);
+
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+
+            ticket.SubmitterId = identity?.FindFirst("UserID")?.Value;
 
             _context.Ticket.Add(ticket);
             await _context.SaveChangesAsync();
+
+            ticketDto = _mapper.Map<TicketDto>(ticket);
             
             // this might not work properly
             return CreatedAtAction(nameof(GetTicket), new { id = ticketDto.Id }, ticketDto);

@@ -10,6 +10,8 @@ using Tracker.Data;
 using Tracker.Models;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using System.Net.Sockets;
+using System.Security.Claims;
 
 namespace Tracker.Controllers
 {
@@ -117,10 +119,18 @@ namespace Tracker.Controllers
                 return Forbid();
             }
 
+            commentDto.Created = null;
+
             Comment comment = _mapper.Map<Comment>(commentDto);
+
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+
+            comment.AuthorId = identity?.FindFirst("UserID")?.Value;
 
             _context.Comment.Add(comment);
             await _context.SaveChangesAsync();
+
+            commentDto = _mapper.Map<CommentDto>(comment);
 
             return CreatedAtAction("GetComment", new { id = commentDto.Id }, commentDto);
         }
