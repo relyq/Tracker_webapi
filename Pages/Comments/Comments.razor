@@ -58,7 +58,6 @@ else
 		CommentList = await client.GetFromJsonAsync<IList<CommentDto>>($"api/Tickets/{TicketId}/Comments");
 		Users = userManager.Users;
 
-		((List<CommentDto>)CommentList).Sort((x, y) => DateTime.Compare(y.Created, x.Created));
 	}
 
 	public async Task AddComment()
@@ -102,7 +101,6 @@ else
 		CommentList = JsonSerializer.Deserialize<IList<CommentDto>>(response.Content.ReadAsStringAsync().Result);
 
 		// can't be null if new comment is posted
-		((List<CommentDto>)CommentList).Sort((x, y) => DateTime.Compare(y.Created, x.Created));
 	}
 
 }

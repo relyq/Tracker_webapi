@@ -45,8 +45,6 @@ namespace Tracker.Pages.Tickets
 
             TicketDto = _mapper.Map<IEnumerable<TicketDto>>(tickets);
 
-            ((List<TicketDto>)TicketDto).Sort((x, y) => DateTime.Compare(y.Created, x.Created));
-
             return Page();
         }
     }
