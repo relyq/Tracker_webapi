@@ -11,6 +11,10 @@ namespace Tracker.Models
         public string Type { get; set; }
 
         [Required]
+        [StringLength(50)]
+        public string NormalizedType { get; set; }
+
+        [Required]
         public Guid OrganizationId { get; set; }
         public Organization Organization { get; set; }
 
