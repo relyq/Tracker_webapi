@@ -82,6 +82,7 @@ namespace Tracker.Data
                 .WithMany()
                 .OnDelete(DeleteBehavior.NoAction);
 
+
             builder.ApplyConfiguration(new RoleConfiguration());
         }
     }
