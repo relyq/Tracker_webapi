@@ -30,7 +30,6 @@ namespace Tracker.Models
         [Required]
         public string SubmitterId { get; set; }
 
-        [Required]
         public string AssigneeId { get; set; }
 
         [DataType(DataType.DateTime)]

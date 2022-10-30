@@ -11,6 +11,7 @@ using Tracker.Models;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using System.ComponentModel.DataAnnotations;
 
 namespace Tracker.Controllers
 {
@@ -22,11 +23,13 @@ namespace Tracker.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
         private readonly AuthHelpers _authHelpers = new AuthHelpers();
+        private readonly IConfiguration _config;
 
-        public TicketsController(ApplicationDbContext context, IMapper mapper)
+        public TicketsController(ApplicationDbContext context, IMapper mapper, IConfiguration config)
         {
             _context = context;
             _mapper = mapper;
+            _config = config;
         }
 
         /* no point in getting all tickets
@@ -114,6 +117,11 @@ namespace Tracker.Controllers
                 return Forbid();
             }
 
+            if (string.IsNullOrEmpty(ticketDto.AssigneeId))
+            {
+                ticketDto.AssigneeId = _config["UnassignedUser"];
+            }
+
             Ticket ticket = _mapper.Map<Ticket>(ticketDto);
 
             _context.Entry(ticket).State = EntityState.Modified;
@@ -137,13 +145,17 @@ namespace Tracker.Controllers
             return NoContent();
         }
 
-
         // POST: api/Tickets
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [Authorize(Roles = "Administrator,Developer")]
         [HttpPost]
         public async Task<ActionResult<TicketDto>> PostTicket(TicketDto ticketDto)
         {
+            if (string.IsNullOrEmpty(ticketDto.AssigneeId))
+            {
+                ticketDto.AssigneeId = _config["UnassignedUser"];
+            }
+
             var p = await _context.Project.FindAsync(ticketDto.ProjectId);
 
             if (p != null && p.OrganizationId != _authHelpers.GetUserOrganization(HttpContext.User))
