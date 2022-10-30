@@ -12,9 +12,7 @@ using Tracker.Models;
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
     Args = args,
-    ApplicationName = typeof(Program).Assembly.FullName,
-    ContentRootPath = Directory.GetCurrentDirectory(),
-    WebRootPath = "wwwroot"
+    ApplicationName = typeof(Program).Assembly.FullName
 });
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
