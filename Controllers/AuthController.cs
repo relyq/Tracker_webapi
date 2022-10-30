@@ -8,6 +8,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq.Expressions;
 using System.Security.Claims;
 using System.Text;
+using Tracker.Data;
 using Tracker.Models;
 
 namespace Tracker.Controllers
@@ -19,11 +20,13 @@ namespace Tracker.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signinManager;
         private readonly IConfiguration _config;
-        public AuthController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signinManager, IConfiguration config)
+        private readonly ApplicationDbContext _context;
+        public AuthController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signinManager, IConfiguration config, ApplicationDbContext context)
         {
             _userManager = userManager;
             _signinManager = signinManager;
             _config = config;
+            _context = context;
         }
 
         [AllowAnonymous]
@@ -71,13 +74,15 @@ namespace Tracker.Controllers
         private async Task<List<Claim>> GetClaims(ApplicationUser user)
         {
             var roles = await _userManager.GetRolesAsync(user);
+            var organization = await _context.Organization.FindAsync(user.OrganizationId);
 
             var claims = new List<Claim>()
             {
                 new Claim(ClaimTypes.NameIdentifier, user.UserName),
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim("UserID", user.Id),
-                new Claim("OrganizationID", user.OrganizationId.ToString())
+                new Claim("OrganizationID", user.OrganizationId.ToString()),
+                new Claim("Organization", organization.Name)
             };
 
             (roles as List<string>).ForEach(role => claims.Add(new Claim(ClaimTypes.Role, role)));
