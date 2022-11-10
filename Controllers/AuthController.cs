@@ -31,7 +31,7 @@ namespace Tracker.Controllers
 
         [AllowAnonymous]
         [HttpPost("login")]
-        public async Task<IActionResult> Login(userLogin userLogin)
+        public async Task<IActionResult> Login(UserLogin userLogin)
         {
             ApplicationUser user = await _userManager.FindByEmailAsync(userLogin.Email);
 
@@ -51,6 +51,22 @@ namespace Tracker.Controllers
             }
 
             return NotFound();
+        }
+
+        [AllowAnonymous]
+        [HttpPost("confirm")]
+        public async Task<IActionResult> Confirm(EmailConfirmation emailConfirmation)
+        {
+            var user = await _userManager.FindByEmailAsync(emailConfirmation.Email);
+
+            var result = await _userManager.ConfirmEmailAsync(user, emailConfirmation.ConfirmationToken);
+
+            if (result.Succeeded)
+            {
+                return Ok();
+            }
+
+            return Unauthorized();
         }
 
         private string GenerateJWT(ApplicationUser user, int exp)
@@ -93,9 +109,15 @@ namespace Tracker.Controllers
         }
     }
 
-    public class userLogin
+    public class UserLogin
     {
         public string Email { get; set; }
         public string Password { get; set; }
+    }
+
+    public class EmailConfirmation
+    {
+        public string Email { get; set; }
+        public string ConfirmationToken { get; set; }
     }
 }
