@@ -29,13 +29,19 @@ namespace Tracker.Controllers
             _context = context;
         }
 
+        public class UserLogin
+        {
+            public string Email { get; set; }
+            public string Password { get; set; }
+        }
+
         [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login(UserLogin userLogin)
         {
             ApplicationUser user = await _userManager.FindByEmailAsync(userLogin.Email);
 
-            if(user.Id == _config["DeletedUser"])
+            if (user.Id == _config["DeletedUser"])
             {
                 return Forbid();
             }
@@ -52,6 +58,11 @@ namespace Tracker.Controllers
 
             return NotFound();
         }
+        public class EmailConfirmation
+        {
+            public string Email { get; set; }
+            public string ConfirmationToken { get; set; }
+        }
 
         [AllowAnonymous]
         [HttpPost("confirm")]
@@ -67,6 +78,34 @@ namespace Tracker.Controllers
             }
 
             return Unauthorized();
+        }
+
+        public class PasswordToken
+        {
+            public string Email { get; set; }
+            public string ResetToken { get; set; }
+            public string Password { get; set; }
+        }
+
+        [AllowAnonymous]
+        [HttpPost("passwordreset")]
+        public async Task<IActionResult> PasswordReset(PasswordToken passwordReset)
+        {
+            var user = await _userManager.FindByEmailAsync(passwordReset.Email);
+
+            var result = await _userManager.ResetPasswordAsync(user, passwordReset.ResetToken, passwordReset.Password);
+
+            if (result.Succeeded)
+            {
+                return Ok();
+            }
+
+            result.Errors.ToList().ForEach(e =>
+            {
+                // do something
+            });
+
+            return BadRequest();
         }
 
         private string GenerateJWT(ApplicationUser user, int exp)
@@ -107,17 +146,5 @@ namespace Tracker.Controllers
 
             return claims;
         }
-    }
-
-    public class UserLogin
-    {
-        public string Email { get; set; }
-        public string Password { get; set; }
-    }
-
-    public class EmailConfirmation
-    {
-        public string Email { get; set; }
-        public string ConfirmationToken { get; set; }
     }
 }

@@ -34,7 +34,13 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(opt =>
     opt.SignIn.RequireConfirmedAccount = true;
 })
     .AddRoles<IdentityRole>()
-    .AddEntityFrameworkStores<ApplicationDbContext>();
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
+
+builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
+{
+    options.TokenLifespan = TimeSpan.FromHours(2);
+});
 
 
 // i think i should use this but it redirects to identity's login page
