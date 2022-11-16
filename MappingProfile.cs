@@ -35,9 +35,12 @@ namespace Tracker
                 .ForMember(c => c.Author, opt => opt.Ignore())
                 .ForMember(c => c.Parent, opt => opt.Ignore())
                 .ForMember(c => c.Replies, opt => opt.Ignore());
-            CreateMap<ApplicationUser, UserDto>();
+            CreateMap<ApplicationUser, UserDto>()
+                .ForMember(u => u.OrganizationsId, opt => opt.Ignore())
+                .AfterMap<UserOrganizationsAction>();
             CreateMap<UserDto, ApplicationUser>()
-                .ForMember(u => u.Organization, opt => opt.Ignore())
+                .ForMember(u => u.Organizations, opt => opt.Ignore())
+                .ForMember(u => u.Roles, opt => opt.Ignore())
                 .ForMember(u => u.Comments, opt => opt.Ignore())
                 .ForMember(u => u.Updated, opt => opt.Ignore())
                 .ForMember(u => u.NormalizedUserName, opt => opt.Ignore())
@@ -75,7 +78,7 @@ namespace Tracker
                 ticket.TicketTypeId = type.Id;
             }
         }
-        public class TicketActivityAction :IMappingAction<Ticket, TicketDto>
+        public class TicketActivityAction : IMappingAction<Ticket, TicketDto>
         {
             private readonly ApplicationDbContext _context;
             public TicketActivityAction(ApplicationDbContext context)
@@ -85,8 +88,20 @@ namespace Tracker
             public void Process(Ticket ticket, TicketDto ticketDto, ResolutionContext context)
             {
                 DateTime? activity = _context.Comment.Where(c => c.TicketId == ticket.Id).OrderBy(c => c.Created).LastOrDefault()?.Created;
-                
+
                 ticketDto.Activity = activity;
+            }
+        }
+        public class UserOrganizationsAction : IMappingAction<ApplicationUser, UserDto>
+        {
+            public void Process(ApplicationUser applicationUser, UserDto userDto, ResolutionContext context)
+            {
+                userDto.OrganizationsId = new List<Guid>();
+
+                applicationUser.Organizations.ToList().ForEach(o =>
+                {
+                    userDto.OrganizationsId.Add(o.Id);
+                });
             }
         }
     }

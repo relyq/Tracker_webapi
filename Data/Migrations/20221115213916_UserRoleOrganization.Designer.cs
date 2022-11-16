@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tracker.Data;
 
@@ -11,9 +12,10 @@ using Tracker.Data;
 namespace Tracker.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20221115213916_UserRoleOrganization")]
+    partial class UserRoleOrganization
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -34,7 +36,7 @@ namespace Tracker.Data.Migrations
 
                     b.HasIndex("UsersId");
 
-                    b.ToTable("ApplicationUserOrganization", (string)null);
+                    b.ToTable("ApplicationUserOrganization");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -308,7 +310,7 @@ namespace Tracker.Data.Migrations
 
                     b.HasIndex("TicketId");
 
-                    b.ToTable("Comment", (string)null);
+                    b.ToTable("Comment");
                 });
 
             modelBuilder.Entity("Tracker.Models.Organization", b =>
@@ -330,7 +332,7 @@ namespace Tracker.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Organization", (string)null);
+                    b.ToTable("Organization");
                 });
 
             modelBuilder.Entity("Tracker.Models.Project", b =>
@@ -367,7 +369,7 @@ namespace Tracker.Data.Migrations
 
                     b.HasIndex("OrganizationId");
 
-                    b.ToTable("Project", (string)null);
+                    b.ToTable("Project");
                 });
 
             modelBuilder.Entity("Tracker.Models.Ticket", b =>
@@ -427,7 +429,7 @@ namespace Tracker.Data.Migrations
 
                     b.HasIndex("TicketTypeId");
 
-                    b.ToTable("Ticket", (string)null);
+                    b.ToTable("Ticket");
                 });
 
             modelBuilder.Entity("Tracker.Models.TicketStatus", b =>
@@ -455,7 +457,7 @@ namespace Tracker.Data.Migrations
 
                     b.HasIndex("OrganizationId");
 
-                    b.ToTable("TicketStatus", (string)null);
+                    b.ToTable("TicketStatus");
                 });
 
             modelBuilder.Entity("Tracker.Models.TicketType", b =>
@@ -483,7 +485,7 @@ namespace Tracker.Data.Migrations
 
                     b.HasIndex("OrganizationId");
 
-                    b.ToTable("TicketType", (string)null);
+                    b.ToTable("TicketType");
                 });
 
             modelBuilder.Entity("Tracker.Models.UserRole", b =>

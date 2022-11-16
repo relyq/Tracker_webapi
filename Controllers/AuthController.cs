@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Data;
 using System.IdentityModel.Tokens.Jwt;
@@ -17,11 +18,15 @@ namespace Tracker.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ApplicationUserManager _userManager;
         private readonly SignInManager<ApplicationUser> _signinManager;
         private readonly IConfiguration _config;
         private readonly ApplicationDbContext _context;
-        public AuthController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signinManager, IConfiguration config, ApplicationDbContext context)
+        private readonly AuthHelpers _authHelpers = new AuthHelpers();
+
+        private readonly int _exp = 30;
+
+        public AuthController(ApplicationUserManager userManager, SignInManager<ApplicationUser> signinManager, IConfiguration config, ApplicationDbContext context)
         {
             _userManager = userManager;
             _signinManager = signinManager;
@@ -39,7 +44,7 @@ namespace Tracker.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(UserLogin userLogin)
         {
-            ApplicationUser user = await _userManager.FindByEmailAsync(userLogin.Email);
+            ApplicationUser user = await _userManager.Users.Include(u => u.Organizations).FirstOrDefaultAsync(u => u.NormalizedEmail == userLogin.Email.ToUpper());
 
             if (user.Id == _config["DeletedUser"])
             {
@@ -51,13 +56,35 @@ namespace Tracker.Controllers
 
             if (res.Succeeded)
             {
-                var exp = 30;
-                var token = GenerateJWT(user, exp);
+                var token = await GenerateJWT(user, _exp);
                 return Ok($"{{\"jwt\":\"{token}\"}}");
             }
 
             return NotFound();
         }
+
+        [HttpPost("switchOrganization/{orgId}")]
+        public async Task<IActionResult> SwitchOrganization(string orgId)
+        {
+            if (string.IsNullOrEmpty(orgId))
+            {
+                return BadRequest();
+            }
+
+            var org = await _context.Organization.FindAsync(new Guid(orgId));
+
+            var user = await _userManager.FindByIdAsync(_authHelpers.GetUserId(User));
+
+            if (!user.Organizations.Contains(org))
+            {
+                BadRequest();
+            }
+
+            var token = await GenerateJWT(user, _exp, orgId);
+
+            return Ok($"{{\"jwt\":\"{token}\"}}");
+        }
+
         public class EmailConfirmation
         {
             public string Email { get; set; }
@@ -108,12 +135,12 @@ namespace Tracker.Controllers
             return BadRequest();
         }
 
-        private string GenerateJWT(ApplicationUser user, int exp)
+        private async Task<string> GenerateJWT(ApplicationUser user, int exp, string? orgId = null)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
-            var claims = GetClaims(user).Result;
+            var claims = await GetClaims(user, orgId);
 
             var token = new JwtSecurityToken(
                 _config["Jwt:Issuer"],
@@ -125,24 +152,26 @@ namespace Tracker.Controllers
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-        
-        private async Task<List<Claim>> GetClaims(ApplicationUser user)
+
+        private async Task<List<Claim>> GetClaims(ApplicationUser user, string orgId)
         {
-            var roles = await _userManager.GetRolesAsync(user);
-            var organization = await _context.Organization.FindAsync(user.OrganizationId);
+            var organization = user.Organizations.FirstOrDefault();
+            if (!string.IsNullOrEmpty(orgId))
+            {
+                organization = user.Organizations.SingleOrDefault(o => o.Id == new Guid(orgId));
+            }
+            var roles = await _userManager.GetRolesInOrganizationAsync(user, organization);
 
             var claims = new List<Claim>()
             {
                 new Claim(ClaimTypes.NameIdentifier, user.UserName),
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim("UserID", user.Id),
-                new Claim("OrganizationID", user.OrganizationId.ToString()),
+                new Claim("OrganizationID", organization.Id.ToString()),
                 new Claim("Organization", organization.Name)
             };
 
             (roles as List<string>).ForEach(role => claims.Add(new Claim(ClaimTypes.Role, role)));
-
-
 
             return claims;
         }

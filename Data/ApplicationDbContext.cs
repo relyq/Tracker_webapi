@@ -5,7 +5,14 @@ using Tracker.Models;
 
 namespace Tracker.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+    public class ApplicationDbContext : IdentityDbContext<
+        ApplicationUser, 
+        IdentityRole, string, 
+        IdentityUserClaim<string>, 
+        UserRole, 
+        IdentityUserLogin<string>, 
+        IdentityRoleClaim<string>, 
+        IdentityUserToken<string>>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -22,29 +29,8 @@ namespace Tracker.Data
         {
             base.OnModelCreating(builder);
 
-            builder.Entity<ApplicationUser>()
-                .Property(u => u.Created)
-                .HasDefaultValueSql("GETUTCDATE()");
-            
-            builder.Entity<Organization>()
-                .Property(o => o.Created)
-                .HasDefaultValueSql("GETUTCDATE()");
-
-            builder.Entity<Project>()
-                .Property(p => p.Created)
-                .HasDefaultValueSql("GETUTCDATE()");
-
-            builder.Entity<Ticket>()
-                .Property(t => t.Created)
-                .HasDefaultValueSql("GETUTCDATE()");
-
-            builder.Entity<Comment>()
-                .Property(c => c.Created)
-                .HasDefaultValueSql("GETUTCDATE()");
-
-            builder.Entity<Organization>()
-                .Property(o => o.Id)
-                .HasDefaultValueSql("NEWID()");
+            builder.Entity<UserRole>()
+                .HasKey(ur => new { ur.UserId, ur.RoleId, ur.OrganizationId });
 
             builder.Entity<Project>()
                 .HasOne(p => p.Author)
@@ -82,6 +68,29 @@ namespace Tracker.Data
                 .WithMany()
                 .OnDelete(DeleteBehavior.NoAction);
 
+            builder.Entity<ApplicationUser>()
+                .Property(u => u.Created)
+                .HasDefaultValueSql("GETUTCDATE()");
+            
+            builder.Entity<Organization>()
+                .Property(o => o.Created)
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            builder.Entity<Project>()
+                .Property(p => p.Created)
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            builder.Entity<Ticket>()
+                .Property(t => t.Created)
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            builder.Entity<Comment>()
+                .Property(c => c.Created)
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            builder.Entity<Organization>()
+                .Property(o => o.Id)
+                .HasDefaultValueSql("NEWID()");
 
             builder.ApplyConfiguration(new RoleConfiguration());
         }

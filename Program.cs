@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Tracker.Data;
 using Tracker.Models;
+using Tracker;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -35,6 +36,7 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(opt =>
 })
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddUserManager<ApplicationUserManager>()
     .AddDefaultTokenProviders();
 
 builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>

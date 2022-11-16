@@ -4,13 +4,19 @@ namespace Tracker.Controllers
 {
     public class AuthHelpers
     {
+        // returns logged in organization
         public Guid GetUserOrganization(ClaimsPrincipal user)
         {
             var identity = user.Identity as ClaimsIdentity;
 
-            Guid organization = new Guid(identity?.FindFirst("OrganizationID")?.Value);
+            return new Guid(identity?.FindFirst("OrganizationID")?.Value);
+        }
 
-            return organization;
+        public string GetUserId(ClaimsPrincipal user)
+        {
+            var identity = user.Identity as ClaimsIdentity;
+
+            return identity?.FindFirst("UserID").Value;
         }
     }
 }

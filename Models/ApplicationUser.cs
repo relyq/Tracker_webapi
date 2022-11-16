@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Identity;
 
 namespace Tracker.Models
@@ -6,8 +7,10 @@ namespace Tracker.Models
     public class ApplicationUser : IdentityUser
     {
         [Required]
-        public Guid OrganizationId { get; set; }
-        public Organization Organization { get; set; }
+        public ICollection<Organization> Organizations { get; set; }
+
+        [NotMapped]
+        public ICollection<UserRole> Roles { get; set; }
 
         [StringLength(50)]
         public string? FirstName { get; set; }
