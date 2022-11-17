@@ -6,11 +6,10 @@ namespace Tracker.Models
 {
     public class ApplicationUser : IdentityUser
     {
-        [Required]
         public ICollection<Organization> Organizations { get; set; }
 
         [NotMapped]
-        public ICollection<UserRole> Roles { get; set; }
+        public ICollection<UserRole>? Roles { get; set; }
 
         [StringLength(50)]
         public string? FirstName { get; set; }

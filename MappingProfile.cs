@@ -37,7 +37,9 @@ namespace Tracker
                 .ForMember(c => c.Replies, opt => opt.Ignore());
             CreateMap<ApplicationUser, UserDto>()
                 .ForMember(u => u.OrganizationsId, opt => opt.Ignore())
-                .AfterMap<UserOrganizationsAction>();
+                .ForMember(u => u.Roles, opt => opt.Ignore())
+                .AfterMap<UserOrganizationsAction>()
+                .AfterMap<UserRolesAction>();
             CreateMap<UserDto, ApplicationUser>()
                 .ForMember(u => u.Organizations, opt => opt.Ignore())
                 .ForMember(u => u.Roles, opt => opt.Ignore())
@@ -92,16 +94,36 @@ namespace Tracker
                 ticketDto.Activity = activity;
             }
         }
+
         public class UserOrganizationsAction : IMappingAction<ApplicationUser, UserDto>
         {
             public void Process(ApplicationUser applicationUser, UserDto userDto, ResolutionContext context)
             {
-                userDto.OrganizationsId = new List<Guid>();
-
-                applicationUser.Organizations.ToList().ForEach(o =>
+                if (applicationUser.Organizations != null)
                 {
-                    userDto.OrganizationsId.Add(o.Id);
-                });
+                    userDto.OrganizationsId = new List<Guid>();
+
+                    applicationUser.Organizations.ToList().ForEach(o =>
+                    {
+                        userDto.OrganizationsId.Add(o.Id);
+                    });
+                }
+            }
+        }
+
+        public class UserRolesAction : IMappingAction<ApplicationUser, UserDto>
+        {
+            public void Process(ApplicationUser applicationUser, UserDto userDto, ResolutionContext context)
+            {
+                if (applicationUser.Roles != null)
+                {
+                    userDto.Roles = new List<OrganizationRole>();
+
+                    ((List<UserRole>)applicationUser.Roles).ForEach(o =>
+                    {
+                        userDto.Roles.Add(new OrganizationRole(o.OrganizationId, o.RoleId));
+                    });
+                }
             }
         }
     }

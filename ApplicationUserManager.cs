@@ -58,7 +58,10 @@ namespace Tracker
 
             var user = await Users.Include(u => u.Organizations).FirstOrDefaultAsync(u => u.Id == id);
 
-            user.Roles = await GetRolesAsync(user);
+            if (user != null)
+            {
+                user.Roles = await GetRolesAsync(user);
+            }
 
             return user;
         }
