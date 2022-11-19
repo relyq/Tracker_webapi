@@ -14,7 +14,7 @@ using Tracker.Models;
 
 namespace Tracker.Controllers
 {
-    [Authorize(Roles = "Administrator")]
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class OrganizationsController : ControllerBase
@@ -38,6 +38,7 @@ namespace Tracker.Controllers
         }
 
         // GET: api/Organizations
+        [Authorize(Roles = "Administrator")]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<OrganizationDto>>> GetOrganization()
         {
@@ -57,7 +58,7 @@ namespace Tracker.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<OrganizationDto>> GetOrganization(Guid id)
         {
-            if (_authHelpers.GetUserOrganization(HttpContext.User) != _trackerGuid && _authHelpers.GetUserOrganization(HttpContext.User) != id)
+            if (_authHelpers.GetUserOrganization(User) != _trackerGuid && _authHelpers.GetUserOrganization(User) != id)
             {
                 return Forbid();
             }
@@ -76,10 +77,11 @@ namespace Tracker.Controllers
 
         // PUT: api/Organizations/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [Authorize(Roles = "Administrator")]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutOrganization(Guid id, OrganizationDto organizationDto)
         {
-            if (_authHelpers.GetUserOrganization(HttpContext.User) != _trackerGuid)
+            if (_authHelpers.GetUserOrganization(User) != _trackerGuid)
             {
                 return Forbid();
             }
@@ -120,6 +122,7 @@ namespace Tracker.Controllers
 
         // POST: api/Organizations
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [Authorize(Roles = "Administrator")]
         [HttpPost]
         public async Task<ActionResult<OrganizationDto>> PostOrganization(OrganizationDto organizationDto)
         {
@@ -142,22 +145,29 @@ namespace Tracker.Controllers
             return CreatedAtAction("GetOrganization", new { id = organizationDto.Id }, organizationDto);
         }
 
-        // POST: api/Organizations/5/Users/5
+        public class UserOrgRole
+        {
+            public string? OrganizationId { get; set; }
+            public string? UserEmail { get; set; }
+            public string? Role { get; set; }
+        }
+
+        // POST: api/Organizations/5/Users/email@email.com
         [Authorize(Roles = "Administrator")]
-        [HttpPost("{organizationId}/Users/{userId}")]
-        public async Task<ActionResult<UserDto>> AddUser(string organizationId, string userId, [FromBody] string? role = null)
+        [HttpPost("{organizationId}/Users/{userEmail}")]
+        public async Task<ActionResult<UserDto>> AddUser(string organizationId, string userEmail, [FromBody] UserOrgRole? userOrgRole = null)
         {
             if (string.IsNullOrEmpty(organizationId))
             {
                 return BadRequest("OrganizationId is required");
             }
 
-            if (string.IsNullOrEmpty(userId))
+            if (string.IsNullOrEmpty(userEmail))
             {
-                return BadRequest("UserId is required");
+                return BadRequest("UserEmail is required");
             }
 
-            var user = await _userManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByEmailAsync(userEmail);
 
             if (user == null)
             {
@@ -179,8 +189,8 @@ namespace Tracker.Controllers
             }
 
             // it's not possible to add magic users to orgs
-            if (user.Id == _configuration["DeletedUser"] || 
-                user.Id == _configuration["RelyqUser"] || 
+            if (user.Id == _configuration["DeletedUser"] ||
+                user.Id == _configuration["RelyqUser"] ||
                 user.Id == _configuration["UnassignedUser"])
             {
                 return Forbid();
@@ -202,19 +212,22 @@ namespace Tracker.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
 
-            if (!string.IsNullOrEmpty(role))
+            if (!string.IsNullOrEmpty(userOrgRole.Role))
             {
-                if (!(await _roleManager.RoleExistsAsync(role)))
+                if (!(await _roleManager.RoleExistsAsync(userOrgRole.Role)))
                 {
                     // might instead want to keep going and record the error
                     return BadRequest("Role does not exist");
                 }
 
-                result = await _userManager.AddToRoleAsync(user, role, org);
+                result = await _userManager.AddToRoleAsync(user, userOrgRole.Role, org);
 
                 if (!result.Succeeded)
                 {
-                    return StatusCode(StatusCodes.Status500InternalServerError);
+                    if (!result.Errors.Any(err => err.Code == nameof(IdentityErrorDescriber.UserAlreadyInRole)))
+                    {
+                        return StatusCode(StatusCodes.Status500InternalServerError);
+                    }
                 }
             }
 
@@ -235,22 +248,22 @@ namespace Tracker.Controllers
             return Ok(userDto);
         }
 
-        // DELETE: api/Organizations/5/Users/5
+        // DELETE: api/Organizations/5/Users/email@email.com
         [Authorize(Roles = "Administrator")]
-        [HttpDelete("{organizationId}/Users/{userId}")]
-        public async Task<IActionResult> RemoveUser(string organizationId, string userId)
+        [HttpDelete("{organizationId}/Users/{userEmail}")]
+        public async Task<IActionResult> RemoveUser(string organizationId, string userEmail)
         {
             if (string.IsNullOrEmpty(organizationId))
             {
                 return BadRequest("OrganizationId is required");
             }
 
-            if (string.IsNullOrEmpty(userId))
+            if (string.IsNullOrEmpty(userEmail))
             {
-                return BadRequest("UserId is required");
+                return BadRequest("UserEmail is required");
             }
 
-            var user = await _userManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByEmailAsync(userEmail);
 
             if (user == null)
             {
@@ -296,22 +309,22 @@ namespace Tracker.Controllers
             // sever all connections to the org
             var projects = await _context.Project
                 .Where(p => p.Organization == org)
-                .Where(p => p.AuthorId == userId)
+                .Where(p => p.AuthorId == user.Id)
                 .ToListAsync();
 
             var ticketsSubmitter = await _context.Ticket
                 .Where(t => t.Project.Organization == org)
-                .Where(t => t.SubmitterId == userId)
+                .Where(t => t.SubmitterId == user.Id)
                 .ToListAsync();
 
             var ticketsAssignee = await _context.Ticket
                 .Where(t => t.Project.Organization == org)
-                .Where(t => t.AssigneeId == userId)
+                .Where(t => t.AssigneeId == user.Id)
                 .ToListAsync();
 
             var comments = await _context.Comment
                 .Where(c => c.Ticket.Project.Organization == org)
-                .Where(c => c.AuthorId == userId)
+                .Where(c => c.AuthorId == user.Id)
                 .ToListAsync();
 
             // remove user-org-role entries
@@ -329,6 +342,7 @@ namespace Tracker.Controllers
         }
 
         // DELETE: api/Organizations/5
+        [Authorize(Roles = "Administrator")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteOrganization(Guid id)
         {
