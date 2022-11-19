@@ -44,9 +44,19 @@ namespace Tracker.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(UserLogin userLogin)
         {
-            ApplicationUser user = await _userManager.Users.Include(u => u.Organizations).FirstOrDefaultAsync(u => u.NormalizedEmail == userLogin.Email.ToUpper());
+            ApplicationUser user = await _userManager.FindByEmailAsync(userLogin.Email);
 
-            if (user.Id == _config["DeletedUser"])
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            if (!user.Organizations.Any())
+            {
+                return BadRequest("User is in no organizations");
+            }
+
+            if (user.Id == _config["DeletedUser"] || user.Id == _config["UnassignedUser"])
             {
                 return Forbid();
             }
@@ -54,13 +64,14 @@ namespace Tracker.Controllers
             // this is wrong lmao
             var res = await _signinManager.CheckPasswordSignInAsync(user, userLogin.Password, false);
 
-            if (res.Succeeded)
+            if (!res.Succeeded)
             {
-                var token = await GenerateJWT(user, _exp);
-                return Ok($"{{\"jwt\":\"{token}\"}}");
+                return Unauthorized();
             }
 
-            return NotFound();
+            var token = await GenerateJWT(user, _exp);
+            return Ok($"{{\"jwt\":\"{token}\"}}");
+
         }
 
         [HttpPost("switchOrganization/{orgId}")]
