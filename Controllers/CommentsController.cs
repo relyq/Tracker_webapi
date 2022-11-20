@@ -53,7 +53,7 @@ namespace Tracker.Controllers
                 return NotFound();
             }
 
-            if ( comment.Ticket.Project.OrganizationId != _authHelpers.GetUserOrganization(HttpContext.User))
+            if (comment.Ticket.Project.OrganizationId != _authHelpers.GetUserOrganization(HttpContext.User))
             {
                 return Forbid();
             }
@@ -110,11 +110,16 @@ namespace Tracker.Controllers
         [HttpPost]
         public async Task<ActionResult<CommentDto>> PostComment(CommentDto commentDto)
         {
-            var t = await _context.Ticket
+            var ticket = await _context.Ticket
                 .Include(t => t.Project)
                 .FirstOrDefaultAsync(t => t.Id == commentDto.TicketId);
 
-            if (t != null && t.Project.OrganizationId != _authHelpers.GetUserOrganization(HttpContext.User))
+            if (ticket == null)
+            {
+                return NotFound("Ticket does not exist");
+            }
+
+            if (ticket.Project.OrganizationId != _authHelpers.GetUserOrganization(HttpContext.User))
             {
                 return Forbid();
             }
