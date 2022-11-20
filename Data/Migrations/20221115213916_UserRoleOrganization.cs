@@ -30,10 +30,23 @@ namespace Tracker.Data.Migrations
                 table: "AspNetUserRoles",
                 column: "OrganizationId");
 
+            migrationBuilder.Sql("UPDATE AspNetUserRoles SET OrganizationId = ApplicationUserOrganization.OrganizationsId FROM AspNetUserRoles JOIN ApplicationUserOrganization ON AspNetUserRoles.UserId = ApplicationUserOrganization.UsersId;");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_AspNetUserRoles_Organization_OrganizationId",
+                table: "AspNetUserRoles",
+                column: "OrganizationId",
+                principalTable: "Organization",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropForeignKey(
+                name: "FK_AspNetUserRoles_Organization_OrganizationId",
+                table: "AspNetUserRoles");
+
             migrationBuilder.DropPrimaryKey(
                 name: "PK_AspNetUserRoles",
                 table: "AspNetUserRoles");

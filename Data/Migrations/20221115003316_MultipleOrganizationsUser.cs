@@ -9,6 +9,10 @@ namespace Tracker.Data.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.Sql("ALTER TABLE AspNetUsers ADD OrganizationIdMigration uniqueidentifier NULL;");
+
+            migrationBuilder.Sql("UPDATE AspNetUsers SET OrganizationIdMigration = OrganizationId;");
+
             migrationBuilder.DropForeignKey(
                 name: "FK_AspNetUsers_Organization_OrganizationId",
                 table: "AspNetUsers");
@@ -49,19 +53,25 @@ namespace Tracker.Data.Migrations
                 name: "IX_ApplicationUserOrganization_UsersId",
                 table: "ApplicationUserOrganization",
                 column: "UsersId");
+
+            migrationBuilder.Sql("INSERT INTO ApplicationUserOrganization (UsersId, OrganizationsId) SELECT Id, OrganizationIdMigration FROM AspNetUsers;");
+
+            migrationBuilder.Sql("ALTER TABLE AspNetUsers DROP COLUMN OrganizationIdMigration;");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "ApplicationUserOrganization");
-
             migrationBuilder.AddColumn<Guid>(
                 name: "OrganizationId",
                 table: "AspNetUsers",
                 type: "uniqueidentifier",
                 nullable: false,
                 defaultValue: new Guid("00000000-0000-0000-0000-000000000000"));
+
+            migrationBuilder.Sql("UPDATE AspNetUsers SET OrganizationId = ApplicationUserOrganization.OrganizationsId FROM AspNetUsers JOIN ApplicationUserOrganization ON AspNetUsers.Id = ApplicationUserOrganization.UsersId;");
+
+            migrationBuilder.DropTable(
+                name: "ApplicationUserOrganization");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetUsers_OrganizationId",
