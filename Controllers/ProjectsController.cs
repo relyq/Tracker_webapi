@@ -58,7 +58,12 @@ namespace Tracker.Controllers
         {
             var project = await _context.Project.FindAsync(id);
 
-            if (project.OrganizationId != _authHelpers.GetUserOrganization(HttpContext.User))
+            if (project == null)
+            {
+                return NotFound("Project does not exist");
+            }
+
+            if (project.OrganizationId != _authHelpers.GetUserOrganization(User))
             {
                 return Forbid();
             }
