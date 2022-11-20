@@ -190,7 +190,6 @@ namespace Tracker.Controllers
 
             // it's not possible to add magic users to orgs
             if (user.Id == _configuration["DeletedUser"] ||
-                user.Id == _configuration["RelyqUser"] ||
                 user.Id == _configuration["UnassignedUser"])
             {
                 return Forbid();
