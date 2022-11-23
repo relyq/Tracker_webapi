@@ -166,7 +166,7 @@ namespace Tracker.Controllers
 
         private async Task<List<Claim>> GetClaims(ApplicationUser user, string orgId)
         {
-            var organization = user.Organizations.FirstOrDefault();
+            var organization = user.Organizations.LastOrDefault();
             if (!string.IsNullOrEmpty(orgId))
             {
                 organization = user.Organizations.SingleOrDefault(o => o.Id == new Guid(orgId));
