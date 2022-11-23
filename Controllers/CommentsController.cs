@@ -30,18 +30,43 @@ namespace Tracker.Controllers
             _mapper = mapper;
         }
 
-        /* no point in getting all comments
         // GET: api/Comments
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Comment>>> GetComment()
+        public async Task<ActionResult<IEnumerable<Comment>>> GetComments([FromQuery] int ticketId)
         {
-            return await _context.Comment.ToListAsync();
+            if (ticketId == null)
+            {
+                return BadRequest("TicketId can't be null");
+            }
+
+            var ticket = await _context.Ticket
+                .Include(t => t.Project)
+                .FirstOrDefaultAsync(t => t.Id == ticketId);
+
+            if (ticket == null)
+            {
+                // this exposes internals
+                return NotFound("Ticket not found");
+            }
+
+            if (ticket.Project.OrganizationId != _authHelpers.GetUserOrganization(User))
+            {
+                return Forbid();
+            }
+
+            IEnumerable<Comment> comments = await _context.Comment
+                .OrderByDescending(c => c.Id)
+                .Where(c => c.TicketId == ticketId)
+                .ToListAsync();
+
+            IEnumerable<CommentDto> commentsDto = _mapper.Map<IEnumerable<Comment>, IEnumerable<CommentDto>>(comments);
+
+            return Ok(commentsDto);
         }
-        */
 
         // GET: api/Comments/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<CommentDto>> GetComment(int id)
+        public async Task<ActionResult<CommentDto>> GetComment([FromRoute] int id)
         {
             var comment = await _context.Comment
                 .Include(c => c.Ticket)
@@ -53,7 +78,13 @@ namespace Tracker.Controllers
                 return NotFound();
             }
 
-            if (comment.Ticket.Project.OrganizationId != _authHelpers.GetUserOrganization(HttpContext.User))
+            if (comment.Ticket == null)
+            {
+                // this exposes internals
+                return NotFound("Ticket not found");
+            }
+
+            if (comment.Ticket.Project.OrganizationId != _authHelpers.GetUserOrganization(User))
             {
                 return Forbid();
             }
@@ -77,7 +108,13 @@ namespace Tracker.Controllers
                 .Include(t => t.Project)
                 .FirstOrDefaultAsync(t => t.Id == commentDto.TicketId);
 
-            if (t != null && t.Project.OrganizationId != _authHelpers.GetUserOrganization(HttpContext.User))
+            if (t == null)
+            {
+                // this exposes internals
+                return NotFound("Ticket not found");
+            }
+
+            if (t.Project.OrganizationId != _authHelpers.GetUserOrganization(User))
             {
                 return Forbid();
             }
@@ -116,6 +153,7 @@ namespace Tracker.Controllers
 
             if (ticket == null)
             {
+                // this exposes internals 
                 return NotFound("Ticket does not exist");
             }
 
