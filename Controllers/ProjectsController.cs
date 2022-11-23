@@ -34,17 +34,39 @@ namespace Tracker.Controllers
         // this might not be rest as it only gets projects from the user's organization
         // GET: api/Projects
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ProjectDto>>> GetProject()
+        public async Task<ActionResult<IEnumerable<ProjectDto>>> GetProject([FromQuery] GetProjectsQueryObject query)
         {
+            if(query.Limit < 0)
+            {
+                return BadRequest("Limit must be a positive integer");
+            }
+
+            if (query.Offset < 0)
+            {
+                return BadRequest("Offset must be a positive integer");
+            }
+
             if (_context.Project == null)
             {
                 return NotFound();
             }
 
-            var organization = _authHelpers.GetUserOrganization(HttpContext.User);
+            const int maxLimit = 25;
+
+            // results limit
+            if (query.Limit > maxLimit)
+            {
+                query.Limit = maxLimit;
+            }
+
+            var organization = _authHelpers.GetUserOrganization(User);
 
             var projects = await _context.Project
+                .OrderByDescending(p => p.Id)
                 .Where(p => p.OrganizationId == organization)
+                .Where(p => query.Filter == null || (EF.Functions.Like(p.Name, $"%{query.Filter}%") || (p.Description != null && EF.Functions.Like(p.Description, $"%{query.Filter}%"))))
+                .Skip(query.Offset)
+                .Take(query.Limit)
                 .ToListAsync();
 
             var projectsDto = _mapper.Map<IEnumerable<Project>, IEnumerable<ProjectDto>>(projects);
@@ -81,7 +103,7 @@ namespace Tracker.Controllers
                 return NotFound();
             }
 
-            if (project.OrganizationId != _authHelpers.GetUserOrganization(HttpContext.User))
+            if (project.OrganizationId != _authHelpers.GetUserOrganization(User))
             {
                 return Forbid();
             }
@@ -97,9 +119,14 @@ namespace Tracker.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutProject(int id, ProjectDto projectDto)
         {
+            if (id == null)
+            {
+                return BadRequest("Id can't be null");
+            }
+
             if (id != projectDto.Id)
             {
-                return BadRequest();
+                return BadRequest("Id does not match object Id");
             }
 
             Project project = await _context.Project
@@ -151,7 +178,7 @@ namespace Tracker.Controllers
 
             project.AuthorId = identity?.FindFirst("UserID")?.Value;
 
-            project.OrganizationId = _authHelpers.GetUserOrganization(HttpContext.User);
+            project.OrganizationId = _authHelpers.GetUserOrganization(User);
 
             _context.Project.Add(project);
             await _context.SaveChangesAsync();
@@ -216,7 +243,7 @@ namespace Tracker.Controllers
                 return NotFound();
             }
 
-            if (project.OrganizationId != _authHelpers.GetUserOrganization(HttpContext.User))
+            if (project.OrganizationId != _authHelpers.GetUserOrganization(User))
             {
                 return Forbid();
             }
@@ -231,5 +258,12 @@ namespace Tracker.Controllers
         {
             return (_context.Project?.Any(e => e.Id == id)).GetValueOrDefault();
         }
+    }
+
+    public class GetProjectsQueryObject
+    {
+        public int Limit { get; set; } = 10;
+        public int Offset { get; set; } = 0;
+        public string? Filter { get; set; }
     }
 }
