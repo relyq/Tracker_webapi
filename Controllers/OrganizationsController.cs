@@ -40,14 +40,37 @@ namespace Tracker.Controllers
         // GET: api/Organizations
         [Authorize(Roles = "Administrator")]
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<OrganizationDto>>> GetOrganization()
+        public async Task<ActionResult<IEnumerable<OrganizationDto>>> GetOrganization([FromQuery] GetOrganizationsQueryObject query)
         {
-            if (_authHelpers.GetUserOrganization(HttpContext.User) != _trackerGuid)
+            if (_authHelpers.GetUserOrganization(User) != _trackerGuid)
             {
                 return Forbid();
             }
 
-            var organizations = await _context.Organization.ToListAsync();
+            if (query.Limit < 0)
+            {
+                return BadRequest("Limit must be a positive integer");
+            }
+
+            if (query.Offset < 0)
+            {
+                return BadRequest("Offset must be a positive integer");
+            }
+
+            const int maxLimit = 50;
+
+            // results limit
+            if (query.Limit > maxLimit)
+            {
+                query.Limit = maxLimit;
+            }
+
+            var organizations = await _context.Organization
+                .OrderByDescending(o => o.Created)
+                .Where(o => query.Filter == null || (EF.Functions.Like(o.Name, $"%{query.Filter}%")))
+                .Skip(query.Offset)
+                .Take(query.Limit)
+                .ToListAsync();
 
             var organizationsDto = _mapper.Map<IEnumerable<Organization>, IEnumerable<OrganizationDto>>(organizations);
 
@@ -67,6 +90,7 @@ namespace Tracker.Controllers
 
             if (organization == null)
             {
+                // this exposes internals
                 return NotFound();
             }
 
@@ -126,7 +150,7 @@ namespace Tracker.Controllers
         [HttpPost]
         public async Task<ActionResult<OrganizationDto>> PostOrganization(OrganizationDto organizationDto)
         {
-            if (_authHelpers.GetUserOrganization(HttpContext.User) != _trackerGuid)
+            if (_authHelpers.GetUserOrganization(User) != _trackerGuid)
             {
                 return Forbid();
             }
@@ -345,7 +369,7 @@ namespace Tracker.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteOrganization(Guid id)
         {
-            if (_authHelpers.GetUserOrganization(HttpContext.User) != _trackerGuid)
+            if (_authHelpers.GetUserOrganization(User) != _trackerGuid)
             {
                 return Forbid();
             }
@@ -359,6 +383,7 @@ namespace Tracker.Controllers
             var organization = await _context.Organization.FindAsync(id);
             if (organization == null)
             {
+                // this exposes internals
                 return NotFound();
             }
 
@@ -372,5 +397,12 @@ namespace Tracker.Controllers
         {
             return _context.Organization.Any(e => e.Id == id);
         }
+    }
+
+    public class GetOrganizationsQueryObject
+    {
+        public int Limit { get; set; } = 25;
+        public int Offset { get; set; } = 0;
+        public string? Filter { get; set; }
     }
 }
