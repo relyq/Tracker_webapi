@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Security.Claims;
+using System.Web;
 
 namespace Tracker.Controllers
 {
@@ -51,34 +52,17 @@ namespace Tracker.Controllers
             return Ok(projectsDto);
         }
 
-        // this should probably be in the tickets controller
+        // redirects to ticket controller until i decide it should be deleted
         // GET: api/Projects/5/Tickets
         [HttpGet("{id}/Tickets")]
-        public async Task<ActionResult<IEnumerable<TicketDto>>> GetTicketByProject(int id)
+        public async Task<ActionResult<IEnumerable<TicketDto>>> GetTicketByProject([FromRoute] int id, [FromQuery] GetTicketsQueryObject query)
         {
-            var project = await _context.Project.FindAsync(id);
+            var querystring = HttpUtility.ParseQueryString(Request.QueryString.ToString());
+            querystring.Set("projectid", id.ToString());
 
-            if (project == null)
-            {
-                return NotFound("Project does not exist");
-            }
+            var url = $"{Request.PathBase}/api/Tickets?{querystring}";
 
-            if (project.OrganizationId != _authHelpers.GetUserOrganization(User))
-            {
-                return Forbid();
-            }
-
-            var tickets = await _context.Ticket
-                .Where(t => t.ProjectId == id)
-                .Include(t => t.Status)
-                .Include(t => t.Type)
-                .Include(t => t.Submitter)
-                .Include(t => t.Assignee)
-                .ToListAsync();
-
-            var ticketsDto = _mapper.Map<IEnumerable<Ticket>, IEnumerable<TicketDto>>(tickets);
-
-            return Ok(ticketsDto);
+            return Redirect(url);
         }
 
         // GET: api/Projects/5
