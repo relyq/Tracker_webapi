@@ -268,6 +268,6 @@ namespace Tracker.Controllers
         public int Limit { get; set; } = 25;
         public int Offset { get; set; } = 0;
         public string Status { get; set; }
-        public string Filter { get; set; }
+        public string? Filter { get; set; }
     }
 }
