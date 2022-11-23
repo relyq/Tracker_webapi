@@ -32,23 +32,75 @@ namespace Tracker.Controllers
             _config = config;
         }
 
-        /* no point in getting all tickets
         // GET: api/Tickets
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<TicketDto>>> GetTicket()
+        public async Task<ActionResult<IEnumerable<TicketDto>>> GetTicket([FromQuery] GetTicketsQueryObject query)
         {
+            if (query.ProjectId == null)
+            {
+                return BadRequest("ProjectId can't be null");
+            }
+
+            if (query.Limit < 0)
+            {
+                return BadRequest("Limit must be a positive integer");
+            }
+
+            if (query.Offset < 0)
+            {
+                return BadRequest("Offset must be a positive integer");
+            }
+
+            const int maxLimit = 50;
+
+            // results limit
+            if (query.Limit > maxLimit)
+            {
+                query.Limit = maxLimit;
+            }
+
+            var project = await _context.Project.FindAsync(query.ProjectId);
+
+            if (project == null)
+            {
+                // this exposes internals
+                return NotFound("Project not found");
+            }
+
+            if (project.OrganizationId != _authHelpers.GetUserOrganization(User))
+            {
+                return Forbid();
+            }
+
+            TicketStatus status = null;
+
+            if (!string.IsNullOrWhiteSpace(query.Status))
+            {
+                status = await _context.TicketStatus.FirstOrDefaultAsync(s => s.NormalizedStatus == query.Status.ToUpper());
+
+                if (status == null)
+                {
+                    return NotFound($"Couldn't find status \"{query.Status}\"");
+                }
+            }
+
             var tickets = await _context.Ticket
                 .Include(t => t.Status)
                 .Include(t => t.Type)
                 .Include(t => t.Submitter)
                 .Include(t => t.Assignee)
+                .OrderByDescending(t => t.Id)
+                .Where(t => t.ProjectId == query.ProjectId)
+                .Where(t => status == null || status == t.Status)
+                .Where(t => query.Filter == null || (EF.Functions.Like(t.Title, $"%{query.Filter}%") || EF.Functions.Like(t.Description, $"%{query.Filter}%")))
+                .Skip(query.Offset)
+                .Take(query.Limit)
                 .ToListAsync();
 
             var ticketsDto = _mapper.Map<IEnumerable<Ticket>, IEnumerable<TicketDto>>(tickets);
 
             return Ok(ticketsDto);
         }
-        */
 
         // GET: api/Tickets/5
         [HttpGet("{id}")]
@@ -67,7 +119,7 @@ namespace Tracker.Controllers
                 return NotFound();
             }
 
-            if (ticket.Project.OrganizationId != _authHelpers.GetUserOrganization(HttpContext.User))
+            if (ticket.Project.OrganizationId != _authHelpers.GetUserOrganization(User))
             {
                 return Forbid();
             }
@@ -77,26 +129,14 @@ namespace Tracker.Controllers
             return ticketDto;
         }
 
+        // redirects to comment controller until i decide it should be deleted
         // GET api/Tickets/5/Comments
         [HttpGet("{id}/Comments")]
         public async Task<ActionResult<IEnumerable<CommentDto>>> GetTicketComments(int id)
         {
-            var ticket = await _context.Ticket
-                .Include(t => t.Project)
-                .FirstOrDefaultAsync(t => t.Id == id);
+            var url = $"{Request.PathBase}/api/Comments?ticketid={id}";
 
-            if (ticket.Project.OrganizationId != _authHelpers.GetUserOrganization(HttpContext.User))
-            {
-                return Forbid();
-            }
-
-            IEnumerable<Comment> comments = await _context.Comment
-                .Where(c => c.TicketId == id)
-                .ToListAsync();
-
-            IEnumerable<CommentDto> commentsDto = _mapper.Map<IEnumerable<Comment>, IEnumerable<CommentDto>>(comments);
-
-            return Ok(commentsDto);
+            return Redirect(url);
         }
 
         // PUT: api/Tickets/5
@@ -107,17 +147,23 @@ namespace Tracker.Controllers
         {
             if (id != ticketDto.Id)
             {
-                return BadRequest();
+                return BadRequest("Path ID does not match object ID");
             }
 
             var p = await _context.Project.FindAsync(ticketDto.ProjectId);
 
-            if (p != null && p.OrganizationId != _authHelpers.GetUserOrganization(HttpContext.User))
+            if (p == null)
+            {
+                // this exposes internals
+                return NotFound("Project not found");
+            }
+
+            if (p.OrganizationId != _authHelpers.GetUserOrganization(User))
             {
                 return Forbid();
             }
 
-            if (string.IsNullOrEmpty(ticketDto.AssigneeId))
+            if (string.IsNullOrWhiteSpace(ticketDto.AssigneeId))
             {
                 ticketDto.AssigneeId = _config["UnassignedUser"];
             }
@@ -158,7 +204,13 @@ namespace Tracker.Controllers
 
             var p = await _context.Project.FindAsync(ticketDto.ProjectId);
 
-            if (p != null && p.OrganizationId != _authHelpers.GetUserOrganization(HttpContext.User))
+            if (p == null)
+            {
+                // this exposes internals
+                return NotFound("Project not found");
+            }
+
+            if (p.OrganizationId != _authHelpers.GetUserOrganization(User))
             {
                 return Forbid();
             }
@@ -175,7 +227,7 @@ namespace Tracker.Controllers
             await _context.SaveChangesAsync();
 
             ticketDto = _mapper.Map<TicketDto>(ticket);
-            
+
             // this might not work properly
             return CreatedAtAction(nameof(GetTicket), new { id = ticketDto.Id }, ticketDto);
         }
@@ -188,13 +240,13 @@ namespace Tracker.Controllers
             var ticket = await _context.Ticket
                 .Include(t => t.Project)
                 .FirstOrDefaultAsync(t => t.Id == id);
-            
+
             if (ticket == null)
             {
                 return NotFound();
             }
 
-            if (ticket.Project.OrganizationId != _authHelpers.GetUserOrganization(HttpContext.User))
+            if (ticket.Project.OrganizationId != _authHelpers.GetUserOrganization(User))
             {
                 return Forbid();
             }
@@ -209,5 +261,13 @@ namespace Tracker.Controllers
         {
             return _context.Ticket.Any(e => e.Id == id);
         }
+    }
+    public class GetTicketsQueryObject
+    {
+        public int? ProjectId { get; set; }
+        public int Limit { get; set; } = 25;
+        public int Offset { get; set; } = 0;
+        public string Status { get; set; }
+        public string Filter { get; set; }
     }
 }
