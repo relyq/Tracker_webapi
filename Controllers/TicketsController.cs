@@ -12,6 +12,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using System.ComponentModel.DataAnnotations;
+using System.Reflection;
 
 namespace Tracker.Controllers
 {
@@ -54,7 +55,7 @@ namespace Tracker.Controllers
             const int maxLimit = 50;
 
             // results limit
-            if (query.Limit > maxLimit)
+            if (query.Limit == 0 || query.Limit > maxLimit)
             {
                 query.Limit = maxLimit;
             }
@@ -84,22 +85,96 @@ namespace Tracker.Controllers
                 }
             }
 
-            var tickets = await _context.Ticket
+            var rowsCount = await _context.Ticket
+                .Where(t => t.ProjectId == query.ProjectId)
+                .Where(t => status == null || status == t.Status)
+                .Where(t => query.Filter == null || (EF.Functions.Like(t.Title, $"%{query.Filter}%") || EF.Functions.Like(t.Description, $"%{query.Filter}%")))
+                .CountAsync();
+
+            var ticketsQuery = _context.Ticket
                 .Include(t => t.Status)
                 .Include(t => t.Type)
                 .Include(t => t.Submitter)
                 .Include(t => t.Assignee)
-                .OrderByDescending(t => t.Id)
                 .Where(t => t.ProjectId == query.ProjectId)
                 .Where(t => status == null || status == t.Status)
-                .Where(t => query.Filter == null || (EF.Functions.Like(t.Title, $"%{query.Filter}%") || EF.Functions.Like(t.Description, $"%{query.Filter}%")))
+                .Where(t => query.Filter == null || (EF.Functions.Like(t.Title, $"%{query.Filter}%") || EF.Functions.Like(t.Description, $"%{query.Filter}%")));
+
+
+            // get sort property & asc/desc
+            if (!string.IsNullOrWhiteSpace(query.Sort) && !string.IsNullOrWhiteSpace(query.Sort.Split('.')[1]))
+            {
+                // this is the only way i found to do this strongly typed
+                // forgive me father for what im about to do
+                switch (query.Sort)
+                {
+                    case "id.desc":
+                        ticketsQuery = ticketsQuery.OrderByDescending(t => t.Id);
+                        break;
+                    case "id.asc":
+                        ticketsQuery = ticketsQuery.OrderBy(t => t.Id);
+                        break;
+
+                    case "priority.desc":
+                        ticketsQuery = ticketsQuery.OrderByDescending(t => t.Priority)
+                            .ThenByDescending(t => t.Id);
+                        break;
+                    case "priority.asc":
+                        ticketsQuery = ticketsQuery.OrderBy(t => t.Priority)
+                            .ThenByDescending(t => t.Id);
+                        break;
+
+                    case "type.desc":
+                        ticketsQuery = ticketsQuery.OrderByDescending(t => t.TicketTypeId)
+                            .ThenByDescending(t => t.Id);
+                        break;
+                    case "type.asc":
+                        ticketsQuery = ticketsQuery.OrderBy(t => t.TicketTypeId)
+                            .ThenByDescending(t => t.Id);
+                        break;
+
+                    /*
+                case "activity":
+                    // activity is not a table column because im dumb
+                    break;
+                    */
+
+                    case "closed.desc":
+                        ticketsQuery = ticketsQuery.OrderByDescending(t => t.Closed)
+                            .ThenByDescending(t => t.Id);
+                        break;
+                    case "closed.asc":
+                        ticketsQuery = ticketsQuery.OrderBy(t => t.Closed)
+                            .ThenByDescending(t => t.Id);
+                        break;
+
+                    case "created.desc":
+                        ticketsQuery = ticketsQuery.OrderByDescending(t => t.Created)
+                            .ThenByDescending(t => t.Id);
+                        break;
+                    case "created.asc":
+                        ticketsQuery = ticketsQuery.OrderBy(t => t.Created)
+                            .ThenByDescending(t => t.Id);
+                        break;
+
+                    default:
+                        return BadRequest("Invalid sorting parameter");
+                }
+            }
+            else
+            {
+                ticketsQuery = ticketsQuery.OrderByDescending(t => t.Id);
+            }
+
+            ticketsQuery = ticketsQuery
                 .Skip(query.Offset)
-                .Take(query.Limit)
-                .ToListAsync();
+                .Take(query.Limit);
+
+            var tickets = await ticketsQuery.ToListAsync();
 
             var ticketsDto = _mapper.Map<IEnumerable<Ticket>, IEnumerable<TicketDto>>(tickets);
 
-            return Ok(ticketsDto);
+            return Ok(new { count = rowsCount, tickets = ticketsDto });
         }
 
         // GET: api/Tickets/5
@@ -265,9 +340,10 @@ namespace Tracker.Controllers
     public class GetTicketsQueryObject
     {
         public int? ProjectId { get; set; }
-        public int Limit { get; set; } = 25;
+        public int Limit { get; set; }
         public int Offset { get; set; } = 0;
         public string Status { get; set; }
         public string? Filter { get; set; }
+        public string? Sort { get; set; }
     }
 }
