@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
+using System.Linq.Expressions;
 
 namespace Tracker.Controllers
 {
@@ -105,60 +106,27 @@ namespace Tracker.Controllers
             if (!string.IsNullOrWhiteSpace(query.Sort) && !string.IsNullOrWhiteSpace(query.Sort.Split('.')[1]))
             {
                 // this is the only way i found to do this strongly typed
-                // forgive me father for what im about to do
-                switch (query.Sort)
+                // forgive me father for what im about to do 
+                // nigggg
+
+                var hsh = new Dictionary<string, IQueryable<Ticket>>()
                 {
-                    case "id.desc":
-                        ticketsQuery = ticketsQuery.OrderByDescending(t => t.Id);
-                        break;
-                    case "id.asc":
-                        ticketsQuery = ticketsQuery.OrderBy(t => t.Id);
-                        break;
+                    {"id.desc", ticketsQuery.OrderByDescending(t => t.Id)},
+                    {"id.asc",  ticketsQuery.OrderBy(t => t.Id)},
+                    {"priority.desc",  ticketsQuery.Desc(t => t.Priority)},
+                    {"priority.asc",  ticketsQuery.Asc(t => t.Priority)},
+                    {"type.desc",  ticketsQuery.Desc(t => t.TicketTypeId)},
+                    {"type.asc",  ticketsQuery.Asc(t => t.TicketTypeId)},
+                    {"closed.desc",  ticketsQuery.Desc(t => t.Closed)},
+                    {"closed.asc",  ticketsQuery.Asc(t => t.Closed)},
+                    {"created.desc",  ticketsQuery.Desc(t => t.Created)},
+                    {"created.asc",  ticketsQuery.Asc(t => t.Created)},
+                };
 
-                    case "priority.desc":
-                        ticketsQuery = ticketsQuery.OrderByDescending(t => t.Priority)
-                            .ThenByDescending(t => t.Id);
-                        break;
-                    case "priority.asc":
-                        ticketsQuery = ticketsQuery.OrderBy(t => t.Priority)
-                            .ThenByDescending(t => t.Id);
-                        break;
 
-                    case "type.desc":
-                        ticketsQuery = ticketsQuery.OrderByDescending(t => t.TicketTypeId)
-                            .ThenByDescending(t => t.Id);
-                        break;
-                    case "type.asc":
-                        ticketsQuery = ticketsQuery.OrderBy(t => t.TicketTypeId)
-                            .ThenByDescending(t => t.Id);
-                        break;
-
-                    /*
-                case "activity":
-                    // activity is not a table column because im dumb
-                    break;
-                    */
-
-                    case "closed.desc":
-                        ticketsQuery = ticketsQuery.OrderByDescending(t => t.Closed)
-                            .ThenByDescending(t => t.Id);
-                        break;
-                    case "closed.asc":
-                        ticketsQuery = ticketsQuery.OrderBy(t => t.Closed)
-                            .ThenByDescending(t => t.Id);
-                        break;
-
-                    case "created.desc":
-                        ticketsQuery = ticketsQuery.OrderByDescending(t => t.Created)
-                            .ThenByDescending(t => t.Id);
-                        break;
-                    case "created.asc":
-                        ticketsQuery = ticketsQuery.OrderBy(t => t.Created)
-                            .ThenByDescending(t => t.Id);
-                        break;
-
-                    default:
-                        return BadRequest("Invalid sorting parameter");
+                if (hsh.ContainsKey(query.Sort))
+                {
+                    ticketsQuery = hsh[query.Sort];
                 }
             }
             else
@@ -176,6 +144,10 @@ namespace Tracker.Controllers
 
             return Ok(new { count = rowsCount, tickets = ticketsDto });
         }
+
+
+
+
 
         // GET: api/Tickets/5
         [HttpGet("{id}")]
@@ -345,5 +317,18 @@ namespace Tracker.Controllers
         public string Status { get; set; }
         public string? Filter { get; set; }
         public string? Sort { get; set; }
+    }
+
+    public static class Extensions
+    {
+        public static IQueryable<Ticket> Desc(this IQueryable<Ticket> ticket, Expression<Func<Ticket, object>> keySelector)
+        {
+            return ticket.OrderByDescending(keySelector).ThenByDescending(t => t.Id);
+        }
+
+        public static IQueryable<Ticket> Asc(this IQueryable<Ticket> ticket, Expression<Func<Ticket, object>> keySelector)
+        {
+            return ticket.OrderBy(keySelector).ThenByDescending(t => t.Id);
+        }
     }
 }
