@@ -2,68 +2,54 @@
 using Tracker.Models;
 using Microsoft.EntityFrameworkCore;
 using Tracker.Data;
+using System.Linq.Expressions;
+
 
 namespace Tracker
 {
+
+    public static class ExtensionMapping
+    {
+        public static IMappingExpression<T, L> Ignore<T, L>(this IMappingExpression<T, L> createmap, params Expression<Func<L, object?>>[] destinationMember)
+        {
+            return destinationMember.Aggregate(createmap, (current, includeMember) => current.ForMember(includeMember, opt => opt.Ignore()));
+        }
+    }
     public class MappingProfile : Profile
     {
 
         public MappingProfile()
         {
+
             CreateMap<Ticket, TicketDto>()
-                .ForMember(t => t.Activity, opt => opt.Ignore())
+                .Ignore(t => t.Activity)
                 .AfterMap<TicketActivityAction>();
+
             CreateMap<TicketDto, Ticket>()
-                .ForMember(t => t.Status, opt => opt.Ignore())
-                .ForMember(t => t.Type, opt => opt.Ignore())
-                .ForMember(t => t.TicketStatusId, opt => opt.Ignore())
-                .ForMember(t => t.TicketTypeId, opt => opt.Ignore())
-                .ForMember(t => t.Comments, opt => opt.Ignore())
-                .ForMember(t => t.Project, opt => opt.Ignore())
-                .ForMember(t => t.Submitter, opt => opt.Ignore())
-                .ForMember(t => t.Assignee, opt => opt.Ignore())
+                .Ignore(s => s.Status, s => s.Type, s => s.TicketStatusId, s => s.TicketTypeId, s => s.Comments, s => s.Project, s => s.Submitter, s => s.Assignee)
                 .AfterMap<TicketTypeStatusAction>();
+
             CreateMap<Project, ProjectDto>();
             CreateMap<ProjectDto, Project>()
-                .ForMember(p => p.Author, opt => opt.Ignore())
-                .ForMember(p => p.Organization, opt => opt.Ignore())
-                .ForMember(p => p.OrganizationId, opt => opt.Ignore())
-                .ForMember(p => p.Tickets, opt => opt.Ignore());
+                .Ignore(p => p.Author, p => p.Organization, p => p.OrganizationId, p => p.Tickets);
+
             CreateMap<Comment, CommentDto>();
             CreateMap<CommentDto, Comment>()
-                .ForMember(c => c.Ticket, opt => opt.Ignore())
-                .ForMember(c => c.Author, opt => opt.Ignore())
-                .ForMember(c => c.Parent, opt => opt.Ignore())
-                .ForMember(c => c.Replies, opt => opt.Ignore());
+                .Ignore(c => c.Ticket, c => c.Author, c => c.Parent, c => c.Replies);
+
             CreateMap<ApplicationUser, UserDto>()
-                .ForMember(u => u.OrganizationsId, opt => opt.Ignore())
-                .ForMember(u => u.Roles, opt => opt.Ignore())
+                .Ignore(u => u.OrganizationsId, u => u.Roles)
                 .AfterMap<UserOrganizationsAction>()
                 .AfterMap<UserRolesAction>();
             CreateMap<UserDto, ApplicationUser>()
-                .ForMember(u => u.Organizations, opt => opt.Ignore())
-                .ForMember(u => u.Roles, opt => opt.Ignore())
-                .ForMember(u => u.Comments, opt => opt.Ignore())
-                .ForMember(u => u.Updated, opt => opt.Ignore())
-                .ForMember(u => u.NormalizedUserName, opt => opt.Ignore())
-                .ForMember(u => u.NormalizedEmail, opt => opt.Ignore())
-                .ForMember(u => u.EmailConfirmed, opt => opt.Ignore())
-                .ForMember(u => u.PasswordHash, opt => opt.Ignore())
-                .ForMember(u => u.SecurityStamp, opt => opt.Ignore())
-                .ForMember(u => u.ConcurrencyStamp, opt => opt.Ignore())
-                .ForMember(u => u.PhoneNumber, opt => opt.Ignore())
-                .ForMember(u => u.PhoneNumberConfirmed, opt => opt.Ignore())
-                .ForMember(u => u.TwoFactorEnabled, opt => opt.Ignore())
-                .ForMember(u => u.LockoutEnd, opt => opt.Ignore())
-                .ForMember(u => u.LockoutEnabled, opt => opt.Ignore())
-                .ForMember(u => u.AccessFailedCount, opt => opt.Ignore());
+                .Ignore(u => u.Organizations, u => u.Roles, u => u.Comments, u => u.Updated,
+                        u => u.NormalizedUserName, u => u.NormalizedEmail, u => u.EmailConfirmed, u => u.PasswordHash,
+                        u => u.SecurityStamp, u => u.ConcurrencyStamp, u => u.PhoneNumber, u => u.PhoneNumberConfirmed,
+                        u => u.TwoFactorEnabled, u => u.LockoutEnd, u => u.LockoutEnabled, u => u.AccessFailedCount);
+
             CreateMap<Organization, OrganizationDto>();
             CreateMap<OrganizationDto, Organization>()
-                .ForMember(o => o.Users, opt => opt.Ignore())
-                .ForMember(o => o.Projects, opt => opt.Ignore())
-                .ForMember(o => o.Roles, opt => opt.Ignore())
-                .ForMember(o => o.TicketTypes, opt => opt.Ignore())
-                .ForMember(o => o.TicketStatuses, opt => opt.Ignore());
+                .Ignore(o => o.Users, o => o.Projects, o => o.Roles, o => o.TicketTypes, o => o.TicketStatuses);
         }
         public class TicketTypeStatusAction : IMappingAction<TicketDto, Ticket>
         {
@@ -127,4 +113,5 @@ namespace Tracker
             }
         }
     }
+
 }
