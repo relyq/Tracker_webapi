@@ -103,12 +103,9 @@ namespace Tracker.Controllers
 
 
             // get sort property & asc/desc
-            if (!string.IsNullOrWhiteSpace(query.Sort) && !string.IsNullOrWhiteSpace(query.Sort.Split('.')[1]))
+            // make sure sort parameter is [property].[direction]
+            if (!string.IsNullOrWhiteSpace(query.Sort) && query.Sort.Split('.').Length == 2 && !string.IsNullOrWhiteSpace(query.Sort.Split('.')[1]))
             {
-                // this is the only way i found to do this strongly typed
-                // forgive me father for what im about to do 
-                // nigggg
-
                 var hsh = new Dictionary<string, IQueryable<Ticket>>()
                 {
                     {"id.desc", ticketsQuery.OrderByDescending(t => t.Id)},
@@ -122,7 +119,6 @@ namespace Tracker.Controllers
                     {"created.desc",  ticketsQuery.Desc(t => t.Created)},
                     {"created.asc",  ticketsQuery.Asc(t => t.Created)},
                 };
-
 
                 if (hsh.ContainsKey(query.Sort))
                 {
@@ -144,10 +140,6 @@ namespace Tracker.Controllers
 
             return Ok(new { count = rowsCount, tickets = ticketsDto });
         }
-
-
-
-
 
         // GET: api/Tickets/5
         [HttpGet("{id}")]

@@ -18,7 +18,7 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
-var connectionString = builder.Configuration.GetConnectionString("vpsConnection");
+var connectionString = builder.Configuration.GetConnectionString("SQLConnection");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
