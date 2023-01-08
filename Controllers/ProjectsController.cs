@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Security.Claims;
 using System.Web;
+using System.Linq.Expressions;
 
 namespace Tracker.Controllers
 {
@@ -36,7 +37,7 @@ namespace Tracker.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ProjectDto>>> GetProject([FromQuery] GetProjectsQueryObject query)
         {
-            if(query.Limit < 0)
+            if (query.Limit < 0)
             {
                 return BadRequest("Limit must be a positive integer");
             }
@@ -54,24 +55,55 @@ namespace Tracker.Controllers
             const int maxLimit = 25;
 
             // results limit
-            if (query.Limit > maxLimit)
+            if (query.Limit == 0 || query.Limit > maxLimit)
             {
                 query.Limit = maxLimit;
             }
 
             var organization = _authHelpers.GetUserOrganization(User);
 
-            var projects = await _context.Project
-                .OrderByDescending(p => p.Id)
+            var rowsCount = await _context.Project
                 .Where(p => p.OrganizationId == organization)
                 .Where(p => query.Filter == null || (EF.Functions.Like(p.Name, $"%{query.Filter}%") || (p.Description != null && EF.Functions.Like(p.Description, $"%{query.Filter}%"))))
+                .CountAsync();
+
+            var projectsQuery = _context.Project
+                .Where(p => p.OrganizationId == organization)
+                .Where(p => query.Filter == null || (EF.Functions.Like(p.Name, $"%{query.Filter}%") || (p.Description != null && EF.Functions.Like(p.Description, $"%{query.Filter}%"))));
+
+
+            // get sort property & asc/desc
+            // make sure sort parameter is [property].[direction]
+            if (!string.IsNullOrWhiteSpace(query.Sort) && query.Sort.Split('.').Length == 2 && !string.IsNullOrWhiteSpace(query.Sort.Split('.')[1]))
+            {
+                var hsh = new Dictionary<string, IQueryable<Project>>()
+                {
+                    {"id.desc", projectsQuery.OrderByDescending(t => t.Id)},
+                    {"id.asc",  projectsQuery.OrderBy(t => t.Id)},
+                    {"created.desc",  projectsQuery.Desc(t => t.Created)},
+                    {"created.asc",  projectsQuery.Asc(t => t.Created)},
+                };
+
+                if (hsh.ContainsKey(query.Sort))
+                {
+                    projectsQuery = hsh[query.Sort];
+                }
+            }
+            else
+            {
+                projectsQuery = projectsQuery.OrderByDescending(t => t.Id);
+            }
+
+            projectsQuery = projectsQuery
                 .Skip(query.Offset)
-                .Take(query.Limit)
-                .ToListAsync();
+                .Take(query.Limit);
+
+            var projects = await projectsQuery.ToListAsync();
+
 
             var projectsDto = _mapper.Map<IEnumerable<Project>, IEnumerable<ProjectDto>>(projects);
 
-            return Ok(projectsDto);
+            return Ok(new { count = rowsCount, projects = projectsDto });
         }
 
         // redirects to ticket controller until i decide it should be deleted
@@ -262,8 +294,9 @@ namespace Tracker.Controllers
 
     public class GetProjectsQueryObject
     {
-        public int Limit { get; set; } = 10;
+        public int Limit { get; set; }
         public int Offset { get; set; } = 0;
         public string? Filter { get; set; }
+        public string? Sort { get; set; }
     }
 }
