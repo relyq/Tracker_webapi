@@ -48,6 +48,9 @@ namespace Tracker.Models
         [Required]
         [DataType(DataType.DateTime)]
         public DateTime Created { get; set; }
+        
+        [DataType(DataType.DateTime)]
+        public DateTime? Activity { get; set; }
 
         [DataType(DataType.DateTime)]
         public DateTime? Closed { get; set; }

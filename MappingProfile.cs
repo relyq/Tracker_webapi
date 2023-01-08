@@ -21,9 +21,7 @@ namespace Tracker
         public MappingProfile()
         {
 
-            CreateMap<Ticket, TicketDto>()
-                .Ignore(t => t.Activity)
-                .AfterMap<TicketActivityAction>();
+            CreateMap<Ticket, TicketDto>();
 
             CreateMap<TicketDto, Ticket>()
                 .Ignore(s => s.Status, s => s.Type, s => s.TicketStatusId, s => s.TicketTypeId, s => s.Comments, s => s.Project, s => s.Submitter, s => s.Assignee)
@@ -64,20 +62,6 @@ namespace Tracker
                 var type = _context.TicketType.FirstOrDefault(t => t.Type == ticketDto.Type);
                 ticket.TicketStatusId = status.Id;
                 ticket.TicketTypeId = type.Id;
-            }
-        }
-        public class TicketActivityAction : IMappingAction<Ticket, TicketDto>
-        {
-            private readonly ApplicationDbContext _context;
-            public TicketActivityAction(ApplicationDbContext context)
-            {
-                _context = context;
-            }
-            public void Process(Ticket ticket, TicketDto ticketDto, ResolutionContext context)
-            {
-                DateTime? activity = _context.Comment.Where(c => c.TicketId == ticket.Id).OrderBy(c => c.Created).LastOrDefault()?.Created;
-
-                ticketDto.Activity = activity;
             }
         }
 

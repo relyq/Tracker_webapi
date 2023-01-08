@@ -125,6 +125,7 @@ namespace Tracker.Controllers
 
             try
             {
+                t.Activity = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
@@ -171,7 +172,9 @@ namespace Tracker.Controllers
             comment.AuthorId = identity?.FindFirst("UserID")?.Value;
 
             _context.Comment.Add(comment);
+            ticket.Activity = DateTime.UtcNow;
             await _context.SaveChangesAsync();
+
 
             commentDto = _mapper.Map<CommentDto>(comment);
 
@@ -196,6 +199,8 @@ namespace Tracker.Controllers
             {
                 return Forbid();
             }
+
+            comment.Ticket.Activity = DateTime.UtcNow;
 
             _context.Comment.Remove(comment);
             await _context.SaveChangesAsync();
