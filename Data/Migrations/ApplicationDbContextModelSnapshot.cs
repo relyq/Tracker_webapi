@@ -34,7 +34,7 @@ namespace Tracker.Data.Migrations
 
                     b.HasIndex("UsersId");
 
-                    b.ToTable("ApplicationUserOrganization", (string)null);
+                    b.ToTable("ApplicationUserOrganization");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -308,7 +308,7 @@ namespace Tracker.Data.Migrations
 
                     b.HasIndex("TicketId");
 
-                    b.ToTable("Comment", (string)null);
+                    b.ToTable("Comment");
                 });
 
             modelBuilder.Entity("Tracker.Models.Organization", b =>
@@ -330,7 +330,7 @@ namespace Tracker.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Organization", (string)null);
+                    b.ToTable("Organization");
                 });
 
             modelBuilder.Entity("Tracker.Models.Project", b =>
@@ -367,7 +367,7 @@ namespace Tracker.Data.Migrations
 
                     b.HasIndex("OrganizationId");
 
-                    b.ToTable("Project", (string)null);
+                    b.ToTable("Project");
                 });
 
             modelBuilder.Entity("Tracker.Models.Ticket", b =>
@@ -377,6 +377,9 @@ namespace Tracker.Data.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<DateTime?>("Activity")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("AssigneeId")
                         .IsRequired()
@@ -427,7 +430,7 @@ namespace Tracker.Data.Migrations
 
                     b.HasIndex("TicketTypeId");
 
-                    b.ToTable("Ticket", (string)null);
+                    b.ToTable("Ticket");
                 });
 
             modelBuilder.Entity("Tracker.Models.TicketStatus", b =>
@@ -455,7 +458,7 @@ namespace Tracker.Data.Migrations
 
                     b.HasIndex("OrganizationId");
 
-                    b.ToTable("TicketStatus", (string)null);
+                    b.ToTable("TicketStatus");
                 });
 
             modelBuilder.Entity("Tracker.Models.TicketType", b =>
@@ -483,7 +486,7 @@ namespace Tracker.Data.Migrations
 
                     b.HasIndex("OrganizationId");
 
-                    b.ToTable("TicketType", (string)null);
+                    b.ToTable("TicketType");
                 });
 
             modelBuilder.Entity("Tracker.Models.UserRole", b =>
@@ -494,7 +497,7 @@ namespace Tracker.Data.Migrations
                     b.Property<string>("RoleId")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<Guid?>("OrganizationId")
+                    b.Property<Guid>("OrganizationId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("UserId", "RoleId", "OrganizationId");

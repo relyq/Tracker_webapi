@@ -69,8 +69,9 @@ namespace Tracker.Controllers
                 return Unauthorized();
             }
 
-            var token = await GenerateJWT(user, _exp);
-            return Ok($"{{\"jwt\":\"{token}\"}}");
+            var jwt = await GenerateJWT(user, _exp);
+
+            return Ok(new { jwt });
 
         }
 

@@ -40,18 +40,67 @@ namespace Tracker.Controllers
         // GET: api/Organizations
         [Authorize(Roles = "Administrator")]
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<OrganizationDto>>> GetOrganization()
+        public async Task<ActionResult<IEnumerable<OrganizationDto>>> GetOrganization([FromQuery] GetOrganizationsQueryObject query)
         {
-            if (_authHelpers.GetUserOrganization(HttpContext.User) != _trackerGuid)
+            if (_authHelpers.GetUserOrganization(User) != _trackerGuid)
             {
                 return Forbid();
             }
 
-            var organizations = await _context.Organization.ToListAsync();
+            if (query.Limit < 0)
+            {
+                return BadRequest("Limit must be a positive integer");
+            }
+
+            if (query.Offset < 0)
+            {
+                return BadRequest("Offset must be a positive integer");
+            }
+
+            const int maxLimit = 50;
+
+            // results limit
+            if (query.Limit == 0 || query.Limit > maxLimit)
+            {
+                query.Limit = maxLimit;
+            }
+
+            var rowsCount = await _context.Organization
+                .Where(o => query.Filter == null || (EF.Functions.Like(o.Name, $"%{query.Filter}%")))
+                .CountAsync();
+
+            var organizationsQuery = _context.Organization
+                .Where(o => query.Filter == null || (EF.Functions.Like(o.Name, $"%{query.Filter}%")));
+
+            // get sort property & asc/desc
+            // make sure sort parameter is [property].[direction]
+            if (!string.IsNullOrWhiteSpace(query.Sort) && query.Sort.Split('.').Length == 2 && !string.IsNullOrWhiteSpace(query.Sort.Split('.')[1]))
+            {
+                var hsh = new Dictionary<string, IQueryable<Organization>>()
+                {
+                    {"created.desc",  organizationsQuery.Desc(t => t.Created)},
+                    {"created.asc",  organizationsQuery.Asc(t => t.Created)},
+                };
+
+                if (hsh.ContainsKey(query.Sort))
+                {
+                    organizationsQuery = hsh[query.Sort];
+                }
+            }
+            else
+            {
+                organizationsQuery = organizationsQuery.OrderByDescending(t => t.Created);
+            }
+
+            organizationsQuery = organizationsQuery
+                .Skip(query.Offset)
+                .Take(query.Limit);
+
+            var organizations = await organizationsQuery.ToListAsync();
 
             var organizationsDto = _mapper.Map<IEnumerable<Organization>, IEnumerable<OrganizationDto>>(organizations);
 
-            return Ok(organizationsDto);
+            return Ok(new { count = rowsCount, organizations = organizationsDto });
         }
 
         // GET: api/Organizations/5
@@ -67,6 +116,7 @@ namespace Tracker.Controllers
 
             if (organization == null)
             {
+                // this exposes internals
                 return NotFound();
             }
 
@@ -126,7 +176,7 @@ namespace Tracker.Controllers
         [HttpPost]
         public async Task<ActionResult<OrganizationDto>> PostOrganization(OrganizationDto organizationDto)
         {
-            if (_authHelpers.GetUserOrganization(HttpContext.User) != _trackerGuid)
+            if (_authHelpers.GetUserOrganization(User) != _trackerGuid)
             {
                 return Forbid();
             }
@@ -345,7 +395,7 @@ namespace Tracker.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteOrganization(Guid id)
         {
-            if (_authHelpers.GetUserOrganization(HttpContext.User) != _trackerGuid)
+            if (_authHelpers.GetUserOrganization(User) != _trackerGuid)
             {
                 return Forbid();
             }
@@ -359,6 +409,7 @@ namespace Tracker.Controllers
             var organization = await _context.Organization.FindAsync(id);
             if (organization == null)
             {
+                // this exposes internals
                 return NotFound();
             }
 
@@ -372,5 +423,13 @@ namespace Tracker.Controllers
         {
             return _context.Organization.Any(e => e.Id == id);
         }
+    }
+
+    public class GetOrganizationsQueryObject
+    {
+        public int Limit { get; set; }
+        public int Offset { get; set; } = 0;
+        public string? Filter { get; set; }
+        public string? Sort { get; set; }
     }
 }

@@ -12,6 +12,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Security.Claims;
+using System.Web;
+using System.Linq.Expressions;
 
 namespace Tracker.Controllers
 {
@@ -33,52 +35,88 @@ namespace Tracker.Controllers
         // this might not be rest as it only gets projects from the user's organization
         // GET: api/Projects
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ProjectDto>>> GetProject()
+        public async Task<ActionResult<IEnumerable<ProjectDto>>> GetProject([FromQuery] GetProjectsQueryObject query)
         {
+            if (query.Limit < 0)
+            {
+                return BadRequest("Limit must be a positive integer");
+            }
+
+            if (query.Offset < 0)
+            {
+                return BadRequest("Offset must be a positive integer");
+            }
+
             if (_context.Project == null)
             {
                 return NotFound();
             }
 
-            var organization = _authHelpers.GetUserOrganization(HttpContext.User);
+            const int maxLimit = 25;
 
-            var projects = await _context.Project
+            // results limit
+            if (query.Limit == 0 || query.Limit > maxLimit)
+            {
+                query.Limit = maxLimit;
+            }
+
+            var organization = _authHelpers.GetUserOrganization(User);
+
+            var rowsCount = await _context.Project
                 .Where(p => p.OrganizationId == organization)
-                .ToListAsync();
+                .Where(p => query.Filter == null || (EF.Functions.Like(p.Name, $"%{query.Filter}%") || (p.Description != null && EF.Functions.Like(p.Description, $"%{query.Filter}%"))))
+                .CountAsync();
+
+            var projectsQuery = _context.Project
+                .Where(p => p.OrganizationId == organization)
+                .Where(p => query.Filter == null || (EF.Functions.Like(p.Name, $"%{query.Filter}%") || (p.Description != null && EF.Functions.Like(p.Description, $"%{query.Filter}%"))));
+
+
+            // get sort property & asc/desc
+            // make sure sort parameter is [property].[direction]
+            if (!string.IsNullOrWhiteSpace(query.Sort) && query.Sort.Split('.').Length == 2 && !string.IsNullOrWhiteSpace(query.Sort.Split('.')[1]))
+            {
+                var hsh = new Dictionary<string, IQueryable<Project>>()
+                {
+                    {"id.desc", projectsQuery.OrderByDescending(t => t.Id)},
+                    {"id.asc",  projectsQuery.OrderBy(t => t.Id)},
+                    {"created.desc",  projectsQuery.Desc(t => t.Created)},
+                    {"created.asc",  projectsQuery.Asc(t => t.Created)},
+                };
+
+                if (hsh.ContainsKey(query.Sort))
+                {
+                    projectsQuery = hsh[query.Sort];
+                }
+            }
+            else
+            {
+                projectsQuery = projectsQuery.OrderByDescending(t => t.Id);
+            }
+
+            projectsQuery = projectsQuery
+                .Skip(query.Offset)
+                .Take(query.Limit);
+
+            var projects = await projectsQuery.ToListAsync();
+
 
             var projectsDto = _mapper.Map<IEnumerable<Project>, IEnumerable<ProjectDto>>(projects);
 
-            return Ok(projectsDto);
+            return Ok(new { count = rowsCount, projects = projectsDto });
         }
 
-        // this should probably be in the tickets controller
+        // redirects to ticket controller until i decide it should be deleted
         // GET: api/Projects/5/Tickets
         [HttpGet("{id}/Tickets")]
-        public async Task<ActionResult<IEnumerable<TicketDto>>> GetTicketByProject(int id)
+        public async Task<ActionResult<IEnumerable<TicketDto>>> GetTicketByProject([FromRoute] int id, [FromQuery] GetTicketsQueryObject query)
         {
-            var project = await _context.Project.FindAsync(id);
+            var querystring = HttpUtility.ParseQueryString(Request.QueryString.ToString());
+            querystring.Set("projectid", id.ToString());
 
-            if (project == null)
-            {
-                return NotFound("Project does not exist");
-            }
+            var url = $"{Request.PathBase}/api/Tickets?{querystring}";
 
-            if (project.OrganizationId != _authHelpers.GetUserOrganization(User))
-            {
-                return Forbid();
-            }
-
-            var tickets = await _context.Ticket
-                .Where(t => t.ProjectId == id)
-                .Include(t => t.Status)
-                .Include(t => t.Type)
-                .Include(t => t.Submitter)
-                .Include(t => t.Assignee)
-                .ToListAsync();
-
-            var ticketsDto = _mapper.Map<IEnumerable<Ticket>, IEnumerable<TicketDto>>(tickets);
-
-            return Ok(ticketsDto);
+            return Redirect(url);
         }
 
         // GET: api/Projects/5
@@ -97,7 +135,7 @@ namespace Tracker.Controllers
                 return NotFound();
             }
 
-            if (project.OrganizationId != _authHelpers.GetUserOrganization(HttpContext.User))
+            if (project.OrganizationId != _authHelpers.GetUserOrganization(User))
             {
                 return Forbid();
             }
@@ -113,9 +151,14 @@ namespace Tracker.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutProject(int id, ProjectDto projectDto)
         {
+            if (id == null)
+            {
+                return BadRequest("Id can't be null");
+            }
+
             if (id != projectDto.Id)
             {
-                return BadRequest();
+                return BadRequest("Id does not match object Id");
             }
 
             Project project = await _context.Project
@@ -167,7 +210,7 @@ namespace Tracker.Controllers
 
             project.AuthorId = identity?.FindFirst("UserID")?.Value;
 
-            project.OrganizationId = _authHelpers.GetUserOrganization(HttpContext.User);
+            project.OrganizationId = _authHelpers.GetUserOrganization(User);
 
             _context.Project.Add(project);
             await _context.SaveChangesAsync();
@@ -232,7 +275,7 @@ namespace Tracker.Controllers
                 return NotFound();
             }
 
-            if (project.OrganizationId != _authHelpers.GetUserOrganization(HttpContext.User))
+            if (project.OrganizationId != _authHelpers.GetUserOrganization(User))
             {
                 return Forbid();
             }
@@ -247,5 +290,13 @@ namespace Tracker.Controllers
         {
             return (_context.Project?.Any(e => e.Id == id)).GetValueOrDefault();
         }
+    }
+
+    public class GetProjectsQueryObject
+    {
+        public int Limit { get; set; }
+        public int Offset { get; set; } = 0;
+        public string? Filter { get; set; }
+        public string? Sort { get; set; }
     }
 }
