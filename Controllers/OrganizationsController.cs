@@ -60,21 +60,47 @@ namespace Tracker.Controllers
             const int maxLimit = 50;
 
             // results limit
-            if (query.Limit > maxLimit)
+            if (query.Limit == 0 || query.Limit > maxLimit)
             {
                 query.Limit = maxLimit;
             }
 
-            var organizations = await _context.Organization
-                .OrderByDescending(o => o.Created)
+            var rowsCount = await _context.Organization
                 .Where(o => query.Filter == null || (EF.Functions.Like(o.Name, $"%{query.Filter}%")))
+                .CountAsync();
+
+            var organizationsQuery = _context.Organization
+                .Where(o => query.Filter == null || (EF.Functions.Like(o.Name, $"%{query.Filter}%")));
+
+            // get sort property & asc/desc
+            // make sure sort parameter is [property].[direction]
+            if (!string.IsNullOrWhiteSpace(query.Sort) && query.Sort.Split('.').Length == 2 && !string.IsNullOrWhiteSpace(query.Sort.Split('.')[1]))
+            {
+                var hsh = new Dictionary<string, IQueryable<Organization>>()
+                {
+                    {"created.desc",  organizationsQuery.Desc(t => t.Created)},
+                    {"created.asc",  organizationsQuery.Asc(t => t.Created)},
+                };
+
+                if (hsh.ContainsKey(query.Sort))
+                {
+                    organizationsQuery = hsh[query.Sort];
+                }
+            }
+            else
+            {
+                organizationsQuery = organizationsQuery.OrderByDescending(t => t.Created);
+            }
+
+            organizationsQuery = organizationsQuery
                 .Skip(query.Offset)
-                .Take(query.Limit)
-                .ToListAsync();
+                .Take(query.Limit);
+
+            var organizations = await organizationsQuery.ToListAsync();
 
             var organizationsDto = _mapper.Map<IEnumerable<Organization>, IEnumerable<OrganizationDto>>(organizations);
 
-            return Ok(organizationsDto);
+            return Ok(new { count = rowsCount, organizations = organizationsDto });
         }
 
         // GET: api/Organizations/5
@@ -401,8 +427,9 @@ namespace Tracker.Controllers
 
     public class GetOrganizationsQueryObject
     {
-        public int Limit { get; set; } = 25;
+        public int Limit { get; set; }
         public int Offset { get; set; } = 0;
         public string? Filter { get; set; }
+        public string? Sort { get; set; }
     }
 }
