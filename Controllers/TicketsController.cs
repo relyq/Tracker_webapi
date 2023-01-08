@@ -322,5 +322,35 @@ namespace Tracker.Controllers
         {
             return ticket.OrderBy(keySelector).ThenByDescending(t => t.Id);
         }
+        
+        public static IQueryable<Project> Desc(this IQueryable<Project> project, Expression<Func<Project, object>> keySelector)
+        {
+            return project.OrderByDescending(keySelector).ThenByDescending(p => p.Id);
+        }
+        
+        public static IQueryable<Project> Asc(this IQueryable<Project> project, Expression<Func<Project, object>> keySelector)
+        {
+            return project.OrderBy(keySelector).ThenByDescending(p => p.Id);
+        }
+
+        public static IQueryable<ApplicationUser> Desc(this IQueryable<ApplicationUser> user, Expression<Func<ApplicationUser, object>> keySelector)
+        {
+            return user.OrderByDescending(keySelector).ThenByDescending(u => u.Created);
+        }
+
+        public static IQueryable<ApplicationUser> Asc(this IQueryable<ApplicationUser> user, Expression<Func<ApplicationUser, object>> keySelector)
+        {
+            return user.OrderBy(keySelector).ThenByDescending(u => u.Created);
+        }
+
+        public static IQueryable<Organization> Desc(this IQueryable<Organization> organization, Expression<Func<Organization, object>> keySelector)
+        {
+            return organization.OrderByDescending(keySelector).ThenByDescending(o => o.Created);
+        }
+
+        public static IQueryable<Organization> Asc(this IQueryable<Organization> organization, Expression<Func<Organization, object>> keySelector)
+        {
+            return organization.OrderBy(keySelector).ThenByDescending(o => o.Created);
+        }
     }
 }
