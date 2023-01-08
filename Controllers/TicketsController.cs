@@ -116,6 +116,8 @@ namespace Tracker.Controllers
                     {"type.asc",  ticketsQuery.Asc(t => t.TicketTypeId)},
                     {"closed.desc",  ticketsQuery.Desc(t => t.Closed)},
                     {"closed.asc",  ticketsQuery.Asc(t => t.Closed)},
+                    {"activity.desc", ticketsQuery.Desc(t => t.Activity) },
+                    {"activity.asc", ticketsQuery.Asc(t => t.Activity) },
                     {"created.desc",  ticketsQuery.Desc(t => t.Created)},
                     {"created.asc",  ticketsQuery.Asc(t => t.Created)},
                 };
