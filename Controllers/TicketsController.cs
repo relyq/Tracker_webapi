@@ -260,6 +260,8 @@ namespace Tracker.Controllers
             }
 
             ticketDto.Created = null;
+            ticketDto.Activity = null;
+            ticketDto.Closed = null;
 
             Ticket ticket = _mapper.Map<Ticket>(ticketDto);
 
