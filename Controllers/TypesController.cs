@@ -15,21 +15,21 @@ namespace Tracker.Controllers
     {
 
         private readonly ApplicationDbContext _context;
-        private readonly IConfiguration _configuration;
+        private readonly IConfiguration _config;
+        private Dictionary<string, string> _magicOrganizations;
 
-        public TypesController(ApplicationDbContext context, IConfiguration configuration)
+        public TypesController(ApplicationDbContext context, IConfiguration config)
         {
             _context = context;
-            _configuration = configuration;
+            _config = config;
+            _magicOrganizations = _config.GetSection("MagicOrganizations").Get<Dictionary<string, string>>();
         }
 
         // GET: api/Types
         [HttpGet]
         public async Task<IEnumerable<string>> Get()
         {
-            var magicOrganizations = _configuration.GetSection("MagicOrganizations").Get<Dictionary<string, string>>();
-
-            var ttypes = await _context.TicketType.Where(t => t.OrganizationId == new Guid(magicOrganizations["DefaultOrganization"])).ToListAsync();
+            var ttypes = await _context.TicketType.Where(t => t.OrganizationId == new Guid(_magicOrganizations["DefaultOrganization"])).ToListAsync();
 
             IList<string> types = new List<string>();
 

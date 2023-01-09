@@ -11,21 +11,21 @@ namespace Tracker.Controllers
     public class StatusesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        private readonly IConfiguration _configuration;
+        private readonly IConfiguration _config;
+        private Dictionary<string, string> _magicOrganizations;
 
-        public StatusesController(ApplicationDbContext context, IConfiguration configuration)
+        public StatusesController(ApplicationDbContext context, IConfiguration config)
         {
             _context = context;
-            _configuration = configuration;
+            _config = config;
+            _magicOrganizations = _config.GetSection("MagicOrganizations").Get<Dictionary<string, string>>();
         }
 
         // GET: api/<StatusesController>
         [HttpGet]
         public async Task<IEnumerable<string>> Get()
         {
-            var magicOrganizations = _configuration.GetSection("MagicOrganizations").Get<Dictionary<string, string>>();
-
-            var tstatuses = await _context.TicketStatus.Where(s => s.OrganizationId == new Guid(magicOrganizations["DefaultOrganization"])).ToListAsync();
+            var tstatuses = await _context.TicketStatus.Where(s => s.OrganizationId == new Guid(_magicOrganizations["DefaultOrganization"])).ToListAsync();
 
             IList<string> statuses = new List<string>();
 

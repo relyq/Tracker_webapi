@@ -24,6 +24,7 @@ namespace Tracker.Controllers
         private readonly IConfiguration _config;
         private readonly ApplicationDbContext _context;
         private readonly AuthHelpers _authHelpers = new AuthHelpers();
+        private Dictionary<string, string> _magicUsers;
 
         private readonly int _exp = 30;
 
@@ -33,6 +34,7 @@ namespace Tracker.Controllers
             _signinManager = signinManager;
             _config = config;
             _context = context;
+            _magicUsers = _config.GetSection("MagicUsers").Get<Dictionary<string, string>>();
         }
 
         public class UserLogin
@@ -57,9 +59,7 @@ namespace Tracker.Controllers
                 return BadRequest("User is in no organizations");
             }
 
-            var magicUsers = _config.GetSection("MagicUsers").Get<Dictionary<string, string>>();
-
-            if (user.Id == magicUsers["DeletedUser"] || user.Id == magicUsers["UnassignedUser"])
+            if (user.Id == _magicUsers["DeletedUser"] || user.Id == _magicUsers["UnassignedUser"])
             {
                 return Forbid();
             }

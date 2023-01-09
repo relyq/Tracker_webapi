@@ -23,19 +23,22 @@ namespace Tracker.Controllers
         private readonly ApplicationUserManager _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IMapper _mapper;
-        private readonly IConfiguration _configuration;
+        private readonly IConfiguration _config;
         private readonly AuthHelpers _authHelpers = new AuthHelpers();
         private readonly Guid _trackerGuid;
+        private Dictionary<string, string> _magicOrganizations;
+        private Dictionary<string, string> _magicUsers;
 
-        public OrganizationsController(ApplicationDbContext context, IMapper mapper, IConfiguration configuration, ApplicationUserManager userManager, RoleManager<IdentityRole> roleManager)
+        public OrganizationsController(ApplicationDbContext context, IMapper mapper, IConfiguration config, ApplicationUserManager userManager, RoleManager<IdentityRole> roleManager)
         {
             _context = context;
             _userManager = userManager;
             _roleManager = roleManager;
             _mapper = mapper;
-            _configuration = configuration;
-            var magicOrganizations = _configuration.GetSection("MagicOrganizations").Get<Dictionary<string, string>>();
-            _trackerGuid = new Guid(magicOrganizations["TrackerOrganization"]);
+            _config = config;
+            _magicOrganizations = _config.GetSection("MagicOrganizations").Get<Dictionary<string, string>>();
+            _magicUsers = _config.GetSection("MagicUsers").Get<Dictionary<string, string>>();
+            _trackerGuid = new Guid(_magicOrganizations["TrackerOrganization"]);
         }
 
         // GET: api/Organizations
@@ -137,10 +140,8 @@ namespace Tracker.Controllers
                 return Forbid();
             }
 
-            var magicOrganizations = _configuration.GetSection("MagicOrganizations").Get<Dictionary<string, string>>();
-
             // these two should not be deleted
-            if (id == new Guid(magicOrganizations["DefaultOrganization"]) || id == new Guid(magicOrganizations["TrackerOrganization"]))
+            if (id == new Guid(_magicOrganizations["DefaultOrganization"]) || id == new Guid(_magicOrganizations["TrackerOrganization"]))
             {
                 return StatusCode(418);
             }
@@ -241,11 +242,9 @@ namespace Tracker.Controllers
                 return NotFound("Organization not found");
             }
 
-            var magicUsers = _configuration.GetSection("MagicUsers").Get<Dictionary<string, string>>();
-
             // it's not possible to add magic users to orgs
-            if (user.Id == magicUsers["DeletedUser"] ||
-                user.Id == magicUsers["UnassignedUser"])
+            if (user.Id == _magicUsers["DeletedUser"] ||
+                user.Id == _magicUsers["UnassignedUser"])
             {
                 return Forbid();
             }
@@ -338,11 +337,9 @@ namespace Tracker.Controllers
                 return NotFound("Organization not found");
             }
 
-            var magicUsers = _configuration.GetSection("MagicUsers").Get<Dictionary<string, string>>();
-
             // only authorize if the caller is from the same org as the user OR if the caller is a tracker admin
             // in addition to this, it's not possible to remove magic users from orgs
-            if ((org != callerOrg && callerOrg.Id != _trackerGuid) || magicUsers.ContainsValue(user.Id))
+            if ((org != callerOrg && callerOrg.Id != _trackerGuid) || _magicUsers.ContainsValue(user.Id))
             {
                 return Forbid();
             }
@@ -386,10 +383,10 @@ namespace Tracker.Controllers
             var orgRoles = await _context.Set<UserRole>().Where(ur => ur.UserId == user.Id && ur.OrganizationId == org.Id).ToListAsync();
             orgRoles.ForEach(r => _context.Set<UserRole>().Remove(r));
 
-            projects.ForEach(p => p.AuthorId = magicUsers["DeletedUser"]);
-            ticketsSubmitter.ForEach(t => t.SubmitterId = magicUsers["DeletedUser"]);
-            ticketsAssignee.ForEach(t => t.AssigneeId = magicUsers["DeletedUser"]);
-            comments.ForEach(c => c.AuthorId = magicUsers["DeletedUser"]);
+            projects.ForEach(p => p.AuthorId = _magicUsers["DeletedUser"]);
+            ticketsSubmitter.ForEach(t => t.SubmitterId = _magicUsers["DeletedUser"]);
+            ticketsAssignee.ForEach(t => t.AssigneeId = _magicUsers["DeletedUser"]);
+            comments.ForEach(c => c.AuthorId = _magicUsers["DeletedUser"]);
 
             await _context.SaveChangesAsync();
 
@@ -406,10 +403,8 @@ namespace Tracker.Controllers
                 return Forbid();
             }
 
-            var magicOrganizations = _configuration.GetSection("MagicOrganizations").Get<Dictionary<string, string>>();
-
             // these two should not be deleted
-            if (id == new Guid(magicOrganizations["DefaultOrganization"]) || id == new Guid(magicOrganizations["TrackerOrganization"]))
+            if (id == new Guid(_magicOrganizations["DefaultOrganization"]) || id == new Guid(_magicOrganizations["TrackerOrganization"]))
             {
                 return StatusCode(418);
             }

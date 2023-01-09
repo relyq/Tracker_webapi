@@ -27,12 +27,14 @@ namespace Tracker.Controllers
         private readonly IMapper _mapper;
         private readonly AuthHelpers _authHelpers = new AuthHelpers();
         private readonly IConfiguration _config;
+        private Dictionary<string, string> _magicUsers;
 
         public TicketsController(ApplicationDbContext context, IMapper mapper, IConfiguration config)
         {
             _context = context;
             _mapper = mapper;
             _config = config;
+            _magicUsers = _config.GetSection("MagicUsers").Get<Dictionary<string, string>>();
         }
 
         // GET: api/Tickets
@@ -205,11 +207,9 @@ namespace Tracker.Controllers
                 return Forbid();
             }
 
-            var magicUsers = _config.GetSection("MagicUsers").Get<Dictionary<string, string>>();
-
             if (string.IsNullOrWhiteSpace(ticketDto.AssigneeId))
             {
-                ticketDto.AssigneeId = magicUsers["UnassignedUser"];
+                ticketDto.AssigneeId = _magicUsers["UnassignedUser"];
             }
 
             Ticket ticket = _mapper.Map<Ticket>(ticketDto);
@@ -241,11 +241,9 @@ namespace Tracker.Controllers
         [HttpPost]
         public async Task<ActionResult<TicketDto>> PostTicket(TicketDto ticketDto)
         {
-            var magicUsers = _config.GetSection("MagicUsers").Get<Dictionary<string, string>>();
-
             if (string.IsNullOrEmpty(ticketDto.AssigneeId))
             {
-                ticketDto.AssigneeId = magicUsers["UnassignedUser"];
+                ticketDto.AssigneeId = _magicUsers["UnassignedUser"];
             }
 
             var p = await _context.Project.FindAsync(ticketDto.ProjectId);
