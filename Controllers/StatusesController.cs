@@ -23,7 +23,9 @@ namespace Tracker.Controllers
         [HttpGet]
         public async Task<IEnumerable<string>> Get()
         {
-            var tstatuses = await _context.TicketStatus.Where(s => s.OrganizationId == new Guid(_configuration["DefaultOrganization"])).ToListAsync();
+            var magicOrganizations = _configuration.GetSection("MagicOrganizations").Get<Dictionary<string, string>>();
+
+            var tstatuses = await _context.TicketStatus.Where(s => s.OrganizationId == new Guid(magicOrganizations["DefaultOrganization"])).ToListAsync();
 
             IList<string> statuses = new List<string>();
 

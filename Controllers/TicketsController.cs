@@ -14,6 +14,7 @@ using System.Security.Claims;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using System.Linq.Expressions;
+using Microsoft.Extensions.Configuration;
 
 namespace Tracker.Controllers
 {
@@ -204,9 +205,11 @@ namespace Tracker.Controllers
                 return Forbid();
             }
 
+            var magicUsers = _config.GetSection("MagicUsers").Get<Dictionary<string, string>>();
+
             if (string.IsNullOrWhiteSpace(ticketDto.AssigneeId))
             {
-                ticketDto.AssigneeId = _config["UnassignedUser"];
+                ticketDto.AssigneeId = magicUsers["UnassignedUser"];
             }
 
             Ticket ticket = _mapper.Map<Ticket>(ticketDto);
@@ -238,9 +241,11 @@ namespace Tracker.Controllers
         [HttpPost]
         public async Task<ActionResult<TicketDto>> PostTicket(TicketDto ticketDto)
         {
+            var magicUsers = _config.GetSection("MagicUsers").Get<Dictionary<string, string>>();
+
             if (string.IsNullOrEmpty(ticketDto.AssigneeId))
             {
-                ticketDto.AssigneeId = _config["UnassignedUser"];
+                ticketDto.AssigneeId = magicUsers["UnassignedUser"];
             }
 
             var p = await _context.Project.FindAsync(ticketDto.ProjectId);

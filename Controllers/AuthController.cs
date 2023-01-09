@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.Data;
 using System.IdentityModel.Tokens.Jwt;
@@ -56,7 +57,9 @@ namespace Tracker.Controllers
                 return BadRequest("User is in no organizations");
             }
 
-            if (user.Id == _config["DeletedUser"] || user.Id == _config["UnassignedUser"])
+            var magicUsers = _config.GetSection("MagicUsers").Get<Dictionary<string, string>>();
+
+            if (user.Id == magicUsers["DeletedUser"] || user.Id == magicUsers["UnassignedUser"])
             {
                 return Forbid();
             }

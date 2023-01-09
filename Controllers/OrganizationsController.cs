@@ -34,7 +34,8 @@ namespace Tracker.Controllers
             _roleManager = roleManager;
             _mapper = mapper;
             _configuration = configuration;
-            _trackerGuid = new Guid(_configuration["TrackerOrganization"]);
+            var magicOrganizations = _configuration.GetSection("MagicOrganizations").Get<Dictionary<string, string>>();
+            _trackerGuid = new Guid(magicOrganizations["TrackerOrganization"]);
         }
 
         // GET: api/Organizations
@@ -136,8 +137,10 @@ namespace Tracker.Controllers
                 return Forbid();
             }
 
+            var magicOrganizations = _configuration.GetSection("MagicOrganizations").Get<Dictionary<string, string>>();
+
             // these two should not be deleted
-            if (id == new Guid(_configuration["DefaultOrganization"]) || id == new Guid(_configuration["TrackerOrganization"]))
+            if (id == new Guid(magicOrganizations["DefaultOrganization"]) || id == new Guid(magicOrganizations["TrackerOrganization"]))
             {
                 return StatusCode(418);
             }
@@ -238,9 +241,11 @@ namespace Tracker.Controllers
                 return NotFound("Organization not found");
             }
 
+            var magicUsers = _configuration.GetSection("MagicUsers").Get<Dictionary<string, string>>();
+
             // it's not possible to add magic users to orgs
-            if (user.Id == _configuration["DeletedUser"] ||
-                user.Id == _configuration["UnassignedUser"])
+            if (user.Id == magicUsers["DeletedUser"] ||
+                user.Id == magicUsers["UnassignedUser"])
             {
                 return Forbid();
             }
@@ -333,10 +338,11 @@ namespace Tracker.Controllers
                 return NotFound("Organization not found");
             }
 
+            var magicUsers = _configuration.GetSection("MagicUsers").Get<Dictionary<string, string>>();
+
             // only authorize if the caller is from the same org as the user OR if the caller is a tracker admin
             // in addition to this, it's not possible to remove magic users from orgs
-            if ((org != callerOrg && callerOrg.Id != _trackerGuid) ||
-                (user.Id == _configuration["DeletedUser"] || user.Id == _configuration["RelyqUser"] || user.Id == _configuration["UnassignedUser"]))
+            if ((org != callerOrg && callerOrg.Id != _trackerGuid) || magicUsers.ContainsValue(user.Id))
             {
                 return Forbid();
             }
@@ -380,10 +386,10 @@ namespace Tracker.Controllers
             var orgRoles = await _context.Set<UserRole>().Where(ur => ur.UserId == user.Id && ur.OrganizationId == org.Id).ToListAsync();
             orgRoles.ForEach(r => _context.Set<UserRole>().Remove(r));
 
-            projects.ForEach(p => p.AuthorId = _configuration["DeletedUser"]);
-            ticketsSubmitter.ForEach(t => t.SubmitterId = _configuration["DeletedUser"]);
-            ticketsAssignee.ForEach(t => t.AssigneeId = _configuration["DeletedUser"]);
-            comments.ForEach(c => c.AuthorId = _configuration["DeletedUser"]);
+            projects.ForEach(p => p.AuthorId = magicUsers["DeletedUser"]);
+            ticketsSubmitter.ForEach(t => t.SubmitterId = magicUsers["DeletedUser"]);
+            ticketsAssignee.ForEach(t => t.AssigneeId = magicUsers["DeletedUser"]);
+            comments.ForEach(c => c.AuthorId = magicUsers["DeletedUser"]);
 
             await _context.SaveChangesAsync();
 
@@ -400,8 +406,10 @@ namespace Tracker.Controllers
                 return Forbid();
             }
 
+            var magicOrganizations = _configuration.GetSection("MagicOrganizations").Get<Dictionary<string, string>>();
+
             // these two should not be deleted
-            if (id == new Guid(_configuration["DefaultOrganization"]) || id == new Guid(_configuration["TrackerOrganization"]))
+            if (id == new Guid(magicOrganizations["DefaultOrganization"]) || id == new Guid(magicOrganizations["TrackerOrganization"]))
             {
                 return StatusCode(418);
             }
