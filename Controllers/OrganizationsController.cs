@@ -140,8 +140,8 @@ namespace Tracker.Controllers
                 return Forbid();
             }
 
-            // these two should not be deleted
-            if (id == new Guid(_magicOrganizations["DefaultOrganization"]) || id == new Guid(_magicOrganizations["TrackerOrganization"]))
+            // these should not be deleted
+            if (_magicOrganizations.ContainsValue(id.ToString()))
             {
                 return StatusCode(418);
             }
@@ -403,8 +403,8 @@ namespace Tracker.Controllers
                 return Forbid();
             }
 
-            // these two should not be deleted
-            if (id == new Guid(_magicOrganizations["DefaultOrganization"]) || id == new Guid(_magicOrganizations["TrackerOrganization"]))
+            // these should not be deleted
+            if (_magicOrganizations.ContainsValue(id.ToString()))
             {
                 return StatusCode(418);
             }

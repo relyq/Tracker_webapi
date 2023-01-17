@@ -21,12 +21,14 @@ namespace Tracker.Controllers
     public class CommentsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly ApplicationUserManager _userManager;
         private readonly IMapper _mapper;
         private readonly AuthHelpers _authHelpers = new AuthHelpers();
 
-        public CommentsController(ApplicationDbContext context, IMapper mapper)
+        public CommentsController(ApplicationDbContext context, ApplicationUserManager userManager, IMapper mapper)
         {
             _context = context;
+            _userManager = userManager;
             _mapper = mapper;
         }
 
@@ -114,7 +116,7 @@ namespace Tracker.Controllers
                 return NotFound("Ticket not found");
             }
 
-            if (t.Project.OrganizationId != _authHelpers.GetUserOrganization(User))
+            if (t.Project.OrganizationId != _authHelpers.GetUserOrganization(User) || commentDto.AuthorId != _authHelpers.GetUserId(User))
             {
                 return Forbid();
             }
@@ -195,7 +197,10 @@ namespace Tracker.Controllers
                 return NotFound();
             }
 
-            if (comment.Ticket.Project.OrganizationId != _authHelpers.GetUserOrganization(HttpContext.User))
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == _authHelpers.GetUserId(User));
+            var organization = await _context.Organization.FindAsync(_authHelpers.GetUserOrganization(HttpContext.User));
+
+            if (comment.Ticket.Project.OrganizationId != organization.Id || (comment.AuthorId != user.Id && !await _userManager.IsInRoleAsync(user, "Administrator", organization)))
             {
                 return Forbid();
             }
