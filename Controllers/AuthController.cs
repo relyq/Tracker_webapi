@@ -64,7 +64,6 @@ namespace Tracker.Controllers
                 return Forbid();
             }
 
-            // this is wrong lmao
             var res = await _signinManager.CheckPasswordSignInAsync(user, userLogin.Password, false);
 
             if (!res.Succeeded)
@@ -75,7 +74,25 @@ namespace Tracker.Controllers
             var jwt = await GenerateJWT(user, _exp);
 
             return Ok(new { jwt });
+        }
 
+        [AllowAnonymous]
+        [HttpPost("login/demo")]
+        public async Task<IActionResult> LoginDemo()
+        {
+            ApplicationUser user = await _userManager.FindByIdAsync(_magicUsers["DemoAdminUser"]);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            // test
+            _authHelpers.DemoReset();
+
+            var jwt = await GenerateJWT(user, _exp);
+
+            return Ok(new { jwt });
         }
 
         [HttpPost("switchOrganization/{orgId}")]
