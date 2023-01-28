@@ -135,6 +135,11 @@ namespace Tracker.Controllers
                 ticketsQuery = ticketsQuery.OrderByDescending(t => t.Id);
             }
 
+            if(query.Status == "closed")
+            {
+                ticketsQuery = ticketsQuery.OrderByDescending(t => t.Closed);
+            }
+
             ticketsQuery = ticketsQuery
                 .Skip(query.Offset)
                 .Take(query.Limit);
