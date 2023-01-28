@@ -19,17 +19,23 @@ namespace Tracker.Controllers
             _context = context;
         }
 
+        public class RoleDto
+        {
+            public string Id { get; set; }
+            public string Name { get; set; }
+        }
+
         // GET: api/<RolesController>
         [HttpGet]
-        public async Task<IEnumerable<string>> Get()
+        public async Task<IEnumerable<RoleDto>> Get()
         {
             var roles = await _context.Roles.ToListAsync();
 
-            List<string> rolesNames = new List<string>();
+            List<RoleDto> rolesDto = new List<RoleDto>();
             
-            roles.ForEach((role) => { rolesNames.Add(role.Name); });
+            roles.ForEach((role) => { rolesDto.Add(new RoleDto { Id = role.Id, Name = role.Name }); });
 
-            return rolesNames;
+            return rolesDto;
         }
 
         // GET api/<RolesController>/5
