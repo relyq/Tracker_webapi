@@ -111,10 +111,7 @@ namespace Tracker.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<OrganizationDto>> GetOrganization(Guid id)
         {
-            if (_authHelpers.GetUserOrganization(User) != _trackerGuid && _authHelpers.GetUserOrganization(User) != id)
-            {
-                return Forbid();
-            }
+            var user = await _userManager.FindByIdAsync(_authHelpers.GetUserId(User));
 
             var organization = await _context.Organization.FindAsync(id);
 
@@ -122,6 +119,11 @@ namespace Tracker.Controllers
             {
                 // this exposes internals
                 return NotFound();
+            }
+
+            if (_authHelpers.GetUserOrganization(User) != _trackerGuid && !await _userManager.IsInRoleAsync(user, "user", organization))
+            {
+                return Forbid();
             }
 
             var organizationDto = _mapper.Map<OrganizationDto>(organization);
