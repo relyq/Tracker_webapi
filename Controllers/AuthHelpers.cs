@@ -21,12 +21,12 @@ namespace Tracker.Controllers
         }
 
         // should be in appsettings
-        private string pythonCmd = "python3";
-        private string resetScriptPath = "/home/tracker/demo_reset.py";
+        private readonly string pythonCmd = "python3";
+        private readonly string resetScriptPath = "/home/tracker/demo_seed.py";
 
-        public void DemoReset()
+        public void DemoSeed(string org_id)
         {
-            RunCmd(pythonCmd, resetScriptPath);
+            RunCmd(pythonCmd, $"{resetScriptPath} {org_id}");
         }
 
         private void RunCmd(string cmd, string args)

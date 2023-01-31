@@ -78,21 +78,68 @@ namespace Tracker.Controllers
 
         [AllowAnonymous]
         [HttpPost("login/demo")]
-        public async Task<IActionResult> LoginDemo()
+        public async Task<IActionResult> LoginDemo([FromBody] string? orgId)
         {
             ApplicationUser user = await _userManager.FindByIdAsync(_magicUsers["DemoAdminUser"]);
 
-            if (user == null)
+            Organization organization = null;
+
+            try
             {
-                return NotFound();
+                organization = await _context.Organization.FindAsync(new Guid(orgId));
+            }
+            catch
+            {
+                // i dont mind this. it just means org will be null and i'll create a new one
             }
 
-            // test
-            _authHelpers.DemoReset();
+            if (organization == null || !await _userManager.IsInRoleAsync(user, "user", organization))
+            {
+                // org either doesnt exist or its not a demo org
 
-            var jwt = await GenerateJWT(user, _exp);
+                // test
+                var random = new Random((int)DateTime.Now.TimeOfDay.TotalMilliseconds);
 
-            return Ok(new { jwt });
+                // create new demo org
+                organization = new Organization { Name = $"Demo organization {random.Next()}" };
+                _context.Organization.Add(organization);
+
+                user.Organizations.Add(organization);
+
+                await _context.SaveChangesAsync();
+
+                var result = await _userManager.AddToRoleAsync(user, "User", organization);
+
+                if (!result.Succeeded)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError);
+                }
+
+                result = await _userManager.AddToRoleAsync(user, "Administrator", organization);
+
+                if (!result.Succeeded)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError);
+                }
+
+                result = await _userManager.UpdateAsync(user);
+
+                if (!result.Succeeded)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError);
+                }
+
+                _authHelpers.DemoSeed(organization.Id.ToString());
+            }
+
+            // org now must exist and be correct
+
+            var jwt = await GenerateJWT(user, _exp, organization.Id.ToString());
+
+            return Ok(new
+            {
+                jwt
+            });
         }
 
         [HttpPost("switchOrganization/{orgId}")]
