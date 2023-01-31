@@ -182,7 +182,6 @@ namespace Tracker
             return userRole != null;
         }
 
-
         public async Task<IdentityResult> AddToRolesAsync(ApplicationUser user, IEnumerable<string> roles)
         {
             throw new NotImplementedException();
