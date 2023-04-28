@@ -16,9 +16,11 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
     ApplicationName = typeof(Program).Assembly.FullName
 });
 
+builder.Configuration.AddEnvironmentVariables();
+
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
-var connectionString = builder.Configuration.GetConnectionString("SQLConnection");
+var connectionString = builder.Configuration["Secrets:SQLConnection"];
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
