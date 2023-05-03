@@ -29,4 +29,10 @@
     <None Include="wwwroot\swagger-ui\SwaggerDark.css" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="scripts\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

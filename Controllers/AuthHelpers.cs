@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Reflection;
 using System.Security.Claims;
 
 namespace Tracker.Controllers
@@ -22,10 +23,11 @@ namespace Tracker.Controllers
 
         // should be in appsettings
         private readonly string pythonCmd = "python3";
-        private readonly string resetScriptPath = "/home/tracker/demo_seed.py";
+        private readonly string resetScriptPath = $"{Path.GetDirectoryName(Assembly.GetEntryAssembly().Location)}/scripts/demo_seed.py";
 
         public void DemoSeed(string org_id)
         {
+            Console.WriteLine(resetScriptPath);
             RunCmd(pythonCmd, $"{resetScriptPath} {org_id}");
         }
 
