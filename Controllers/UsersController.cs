@@ -34,10 +34,10 @@ namespace Tracker.Controllers
         private readonly IConfiguration _config;
         private readonly Guid _trackerGuid;
         private readonly ApplicationDbContext _context;
-        private static readonly string _senderEmail = "relyq@silics.com";
+        private static readonly string _senderEmail = "relyq@relyq.dev";
         private SmtpClient _smtpClient = new SmtpClient
         {
-            Host = "mail.silics.com",
+            Host = "mail.relyq.dev",
             Port = 587,
             EnableSsl = false,
             Timeout = 30000
@@ -64,7 +64,7 @@ namespace Tracker.Controllers
             _trackerGuid = new Guid(_magicOrganizations["TrackerOrganization"]);
             _context = context;
 
-            _smtpClient.Credentials = new System.Net.NetworkCredential(_senderEmail, _config["Secrets:SMTPPassword"]);
+            _smtpClient.Credentials = new NetworkCredential(_senderEmail, _config["Secrets:SMTPPassword"]);
         }
 
         [HttpGet]
@@ -271,6 +271,7 @@ namespace Tracker.Controllers
         {
             public string Email { get; set; }
             public string Password { get; set; }
+            public string BaseUrl { get; set; }
         }
 
 
@@ -313,7 +314,7 @@ namespace Tracker.Controllers
 
                 var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 
-                SendConfirmationEmail(newUser.Email, code);
+                SendConfirmationEmail(newUser.BaseUrl, newUser.Email, code);
 
                 // should try{} here as the user is already created and if this fails the caller might not know it
                 var userDto = _mapper.Map<UserDto>(user);
@@ -457,7 +458,7 @@ namespace Tracker.Controllers
         }
 
         [HttpPost("passwordreset")]
-        public async Task<IActionResult> PasswordReset()
+        public async Task<IActionResult> PasswordReset(string baseUrl)
         {
             var user = await _userManager.FindByEmailAsync(User.Claims.Where(c => c.Type == ClaimTypes.Email).FirstOrDefault().Value);
 
@@ -472,7 +473,7 @@ namespace Tracker.Controllers
             {
                 var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
 
-                SendPasswordResetEmail(user.Email, resetToken);
+                SendPasswordResetEmail(baseUrl, user.Email, resetToken);
 
                 return Ok();
             }
@@ -493,7 +494,7 @@ namespace Tracker.Controllers
         }
 
         // should return result
-        private void SendConfirmationEmail(string email, string confirmationToken)
+        private void SendConfirmationEmail(string baseUrl, string email, string confirmationToken)
         {
             var encodedToken = HttpUtility.UrlEncode(confirmationToken);
 
@@ -501,7 +502,7 @@ namespace Tracker.Controllers
             {
                 From = new MailAddress(_senderEmail),
                 Subject = "Tracker - Email confirmation",
-                Body = $"Here's your email confirmation link: https://tracker.silics.com/#/confirm/{email}/{encodedToken}",
+                Body = $"Here's your email confirmation link: https://{baseUrl}/#/confirm/{email}/{encodedToken}",
                 IsBodyHtml = true,
             };
             mailMessage.To.Add(email);
@@ -510,7 +511,7 @@ namespace Tracker.Controllers
         }
 
         // should return result
-        private void SendPasswordResetEmail(string email, string resetToken)
+        private void SendPasswordResetEmail(string baseUrl, string email, string resetToken)
         {
             var encodedToken = HttpUtility.UrlEncode(resetToken);
 
@@ -518,7 +519,7 @@ namespace Tracker.Controllers
             {
                 From = new MailAddress(_senderEmail),
                 Subject = "Tracker - Password reset",
-                Body = $"Here's your password reset link: https://tracker.silics.com/#/reset/{email}/{encodedToken}",
+                Body = $"Here's your password reset link: https://{baseUrl}/#/reset/{email}/{encodedToken}",
                 IsBodyHtml = true,
             };
             mailMessage.To.Add(email);
