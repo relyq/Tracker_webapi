@@ -1,12 +1,15 @@
 import sys
 import requests
 import json
+import os
 
 #base_url_vps='https://vps-2933482-x.dattaweb.com:7004'
 base_url_local='https://localhost:7004'
 base_url_pve='https://relyq.silics.com:7004'
 base_url_aws='https://aws-tracker-api.relyq.dev:7004'
-base_url=base_url_pve
+base_url=os.environ.get('Tracker__BaseUrl')
+if not base_url:
+    base_url=base_url_pve
 org_id = sys.argv[1]
 demo_user_email='DemoAdmin@tracker.silics.com'
 

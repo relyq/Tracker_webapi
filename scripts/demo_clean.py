@@ -7,7 +7,9 @@ import os
 base_url_local='https://localhost:7004'
 base_url_pve='https://relyq.silics.com:7004'
 base_url_aws='https://aws-tracker-api.relyq.dev:7004'
-base_url=base_url_pve
+base_url=os.environ.get('Tracker__BaseUrl')
+if not base_url:
+    base_url=base_url_pve
 demo_user_id='83828f8c-550f-4551-940d-72035374f95e'
 demo_org_id='9b001357-c03f-4cf5-9648-44fba3491745'
 janitor_email='janitor@tracker.silics.com'
