@@ -25,11 +25,11 @@ jobs:
       run: dotnet publish --self-contained -r linux-x64
       
     - name: copy codedeploy files
-      run: cp .aws/* Tracker/bin/Debug/net6.0/linux-x64/publish/
+      run: echo $(ls) && cp .aws/* bin/Debug/net6.0/linux-x64/publish/
     
     - name: tar artifact
       id: tar
-      run: echo $(ls) && mkdir build && tar -czf build/api.tar.gz -C Tracker/bin/Debug/net6.0/linux-x64/publish/ .
+      run: mkdir build && tar -czf build/api.tar.gz -C bin/Debug/net6.0/linux-x64/publish/ .
       
     - name: upload tar.gz build artifact to s3
       uses: jakejarvis/s3-sync-action@v0.5.1
