@@ -1,0 +1,52 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: .NET
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 6.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --no-restore --self-contained -r linux-x64
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
+      
+    - name: copy codedeploy files
+      run: cp .aws/* dist/
+    
+    - name: tar artifact
+      id: tar
+      run: echo $(ls) && mkdir build && tar -czf build/api.tar.gz -C Tracker/bin/Debug/net6.0/linux-x64/publish/ .
+      
+    - name: upload tar.gz build artifact to s3
+      uses: jakejarvis/s3-sync-action@v0.5.1
+      env:
+        AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: 'us-east-1'   # optional: defaults to us-east-1
+        SOURCE_DIR: 'build'      # optional: defaults to entire repository
+        DEST_DIR: 'api'
+    
+    - name: upload build artifact to github
+      uses: actions/upload-artifact@v3
+      with:
+        name: build
+        path: Tracker/bin/Debug/net6.0/linux-x64/publish/
