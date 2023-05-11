@@ -25,7 +25,7 @@ jobs:
       run: dotnet publish --self-contained -r linux-x64
       
     - name: copy codedeploy files
-      run: cp .aws/* dist/
+      run: cp .aws/* Tracker/bin/Debug/net6.0/linux-x64/publish/
     
     - name: tar artifact
       id: tar
