@@ -1,4 +1,5 @@
 ## tracker api
+
 https://tracker.relyq.dev/
 
 ./scripts folder is copied to build in .csproj
@@ -6,4 +7,13 @@ https://tracker.relyq.dev/
 - secrets for the api are stored on env vars
 - secrets for python scripts are stored on cron env vars
 
-'base_url' must be set on the python scripts when deploying
+### required env vars
+
+- ASPNETCORE_URLS
+- ASPNETCORE_HTTPS_PORT
+- ASPNETCORE_ENVIRONMENT
+- ASPNETCORE_CONTENTROOT
+- Jwt\_\_Key
+- Secrets\_\_SQLConnection
+- Secrets\_\_SMTPPassword
+- Tracker\_\_BaseUrl
