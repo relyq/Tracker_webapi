@@ -1,0 +1,12 @@
+.vs
+Dockerfile*
+docker-compose*
+.dockerignore
+.git
+.gitignore
+README.md
+LICENSE
+scripts/demo_clean.py
+.aws
+.github
+bin
