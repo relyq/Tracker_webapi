@@ -9,6 +9,10 @@ using System.Text;
 using Tracker.Data;
 using Tracker.Models;
 using Tracker;
+using Microsoft.Data.SqlClient;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
+using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -45,6 +49,13 @@ builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
 {
     options.TokenLifespan = TimeSpan.FromHours(2);
 });
+
+builder.Services.AddDataProtection().UseCryptographicAlgorithms(
+    new AuthenticatedEncryptorConfiguration
+    {
+        EncryptionAlgorithm = EncryptionAlgorithm.AES_256_GCM,
+        ValidationAlgorithm = ValidationAlgorithm.HMACSHA256
+    });
 
 
 // i think i should use this but it redirects to identity's login page
@@ -126,6 +137,12 @@ if (app.Environment.IsDevelopment())
     {
         c.InjectStylesheet("/swagger-ui/SwaggerDark.css");
     });
+
+    // test connstring
+    using (SqlConnection conn = new SqlConnection(connectionString))
+    {
+        conn.Open(); // throws if invalid string
+    }
 }
 
 app.UseHttpsRedirection();
