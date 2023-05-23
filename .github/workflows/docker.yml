@@ -27,7 +27,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: relyq/tracker-nginx
+          images: relyq/tracker-dotnet
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
