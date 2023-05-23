@@ -1,0 +1,33 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: github-upload
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 6.0.x
+      - name: publish
+        run: dotnet publish --self-contained -r linux-x64
+
+      - name: copy codedeploy files
+        run: cp .aws/* bin/Debug/net6.0/linux-x64/
+
+      - name: tar artifact
+        id: tar
+        run: mkdir build && tar -czf build/api.tar.gz -C bin/Debug/net6.0/linux-x64/ publish appspec.yml clean.sh post_install.sh start_api.sh stop_api.sh
+
+      - name: upload build artifact to github
+        uses: actions/upload-artifact@v3
+        with:
+          name: build
+          path: build/api.tar.gz
