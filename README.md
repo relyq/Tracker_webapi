@@ -1,5 +1,7 @@
 ## tracker api
 
+copy deploy.sh to root before deploying
+
 https://tracker.relyq.dev/
 
 ./scripts folder is copied to build in .csproj
